@@ -285,6 +285,37 @@
   .lap-tooltip .row .dot{ width:7px; height:7px; border-radius:2px; flex:none; }
   .lap-tooltip .hd{ color:var(--text-muted); margin-bottom:3px; font-size:10.5px; }
 
+  /* ---- next grand prix ---- */
+  .circuit-facts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; }
+  .circuit-facts .fact{ background:var(--surface-sunk); border-radius:9px; padding:10px 12px; }
+  .circuit-facts .fact .k{ font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; }
+  .circuit-facts .fact .v{ font:600 14.5px "IBM Plex Mono",monospace; margin-top:3px; }
+  .circuit-facts .fact .v small{ font-family:"IBM Plex Sans",sans-serif; font-weight:400; color:var(--text-secondary); font-size:11.5px; }
+
+  .circuit-diagram{
+    background:#FAFAF9; border:1px solid var(--border); border-radius:12px;
+    padding:16px; text-align:center;
+  }
+  .circuit-diagram img{ max-width:100%; height:auto; display:block; margin:0 auto; }
+  .circuit-diagram .credit{ margin-top:10px; font-size:11px; color:#77766f; }
+  .circuit-diagram .credit a{ color:#4a493f; }
+
+  .tyre-allocation{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .tyre-chip{
+    display:flex; align-items:center; gap:10px; background:var(--surface-sunk);
+    border-radius:11px; padding:10px 14px; flex:1 1 160px;
+  }
+  .tyre-chip .disc{
+    width:32px; height:32px; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font:700 13px "IBM Plex Mono",monospace;
+  }
+  .tyre-chip .lbl{ font-size:12.5px; }
+  .tyre-chip .lbl b{ display:block; font-size:13.5px; }
+
+  .strategy-notes p{ font-size:13.5px; color:var(--text-secondary); line-height:1.65; margin:0 0 10px; }
+  .strategy-notes p:last-child{ margin-bottom:0; }
+
   /* ---- news ---- */
   .refresh-btn{
     flex:none; font:600 12.5px "IBM Plex Sans",sans-serif; color:var(--text-secondary);
@@ -324,6 +355,7 @@
 
 <nav class="tabbar" id="tabbar">
   <button type="button" class="tab-btn active" data-tab="overview">개요</button>
+  <button type="button" class="tab-btn" data-tab="nextgp">다음 그랑프리</button>
   <button type="button" class="tab-btn" data-tab="standings">순위</button>
   <button type="button" class="tab-btn" data-tab="calendar">캘린더</button>
   <button type="button" class="tab-btn" data-tab="replay">레이스 리플레이</button>
@@ -353,6 +385,32 @@
       <h2 id="lrTitle">최근 레이스 결과</h2>
       <div class="podium" id="lrPodium"></div>
       <div class="fastest" id="lrFastest"></div>
+    </section>
+  </div>
+
+  <div class="tab-panel" data-tab="nextgp" hidden>
+    <section class="card">
+      <span class="eyebrow" id="ngEyebrow">다음 그랑프리</span>
+      <div class="race-name" id="ngName" style="margin-bottom:2px;">—</div>
+      <div class="race-loc" id="ngLoc" style="margin-bottom:16px;">—</div>
+      <div class="circuit-facts" id="ngFacts"></div>
+    </section>
+
+    <section class="card">
+      <h2>서킷 레이아웃</h2>
+      <div class="circuit-diagram" id="ngDiagram"></div>
+    </section>
+
+    <section class="card">
+      <h2>피렐리 타이어 & 예상 전략</h2>
+      <div class="cnt">피렐리가 이번 라운드에 가져오는 3개 컴파운드</div>
+      <div class="tyre-allocation" id="ngTyres"></div>
+      <div class="strategy-notes" id="ngStrategy"></div>
+    </section>
+
+    <section class="card" id="ngNewsCard">
+      <h2>이 그랑프리 관련 뉴스</h2>
+      <div id="ngNewsList"></div>
     </section>
   </div>
 
@@ -538,6 +596,7 @@ const NEWS_UPDATED_AT = "2026-09-03";
 const NEWS_ITEMS = [
   {
     tag: "R13 프리뷰",
+    round: 13,
     title: "안토넬리, 홈 그랑프리 몬자에서 그리드 페널티 위기",
     body: "시즌 초반 압도적인 페이스를 보여온 안토넬리가 엔진 부품 교체로 이탈리아 GP에서 그리드 페널티를 받을 전망이다. 1985년 미켈레 알보레토 이후 없었던 이탈리아인의 몬자 우승 기대도 이번엔 어려워 보인다.",
     source: "ESPN", url: "https://www.espn.com/f1/story/_/id/49689121/italian-grand-prix-2026-circuit-monza-race-f1-start-s-how-watch-schedule-usa-tv-channel-live-stream-predictions-results"
@@ -561,6 +620,31 @@ const NEWS_ITEMS = [
     source: "RacingNews365", url: "https://racingnews365.com/f1/standings/2026/drivers"
   }
 ];
+
+// 다음 그랑프리 프리뷰: 매 라운드 끝나고 다음 라운드 기준으로 다시 조사해서 갱신
+const NEXT_RACE_PREVIEW = {
+  round: 13,
+  circuitName: "Autodromo Nazionale di Monza",
+  diagram: { src: "assets/circuits/monza.svg", creditText: "Will Pittenger, CC BY-SA 3.0", creditUrl: "https://commons.wikimedia.org/wiki/File:Monza_track_map.svg" },
+  facts: [
+    { k: "랩 길이", v: "5.793", unit: "km" },
+    { k: "레이스 랩수", v: "53", unit: "랩" },
+    { k: "총 거리", v: "306.7", unit: "km" },
+    { k: "랩 레코드", v: "1:21.432", unit: "Norris · 2024" },
+    { k: "첫 그랑프리", v: "1922", unit: "년" },
+    { k: "코너 수", v: "11", unit: "개" }
+  ],
+  tyres: [
+    { compound: "C5", label: "소프트", key: "soft" },
+    { compound: "C4", label: "미디엄", key: "medium" },
+    { compound: "C3", label: "하드", key: "hard" }
+  ],
+  strategyNotes: [
+    "피렐리가 2026년 라인업 중 가장 부드러운 조합(C3-C4-C5)을 몬자에 가져왔지만, 피트로 잃는 시간이 크고 추월도 비교적 쉬운 서킷 특성상 여전히 원스톱이 가장 유력한 시나리오로 꼽힌다.",
+    "기본 전략은 미디엄→하드 조합이 될 전망이다. 다만 C3 하드도 이 서킷 기준으로는 꽤 부드러운 컴파운드라 두 번째 스틴트를 단순히 '타이어 관리'로만 채우긴 어려울 것으로 보인다.",
+    "가장 큰 변수는 리어 타이어 마모다. 레티필로·로자·레스모·아스카리 구간에서 강한 가속이 반복되며 리어에 하중이 집중돼, 기온이 크게 오르지 않는 한 세 컴파운드 모두 일요일 전략에 등장할 가능성이 있다."
+  ]
+};
 
 // round, raceName, locality, country, dateISO
 const upcomingRaces = [
@@ -627,6 +711,45 @@ function updateCountdown(){
 }
 updateCountdown();
 setInterval(updateCountdown, 30000);
+
+// ---- next grand prix tab ----
+function renderNextGpTab(){
+  const p = NEXT_RACE_PREVIEW;
+  document.getElementById("ngEyebrow").textContent = "R" + nr[0] + " · 다음 그랑프리";
+  document.getElementById("ngName").textContent = p.circuitName;
+  document.getElementById("ngLoc").textContent = nr[2] + ", " + nr[3] + " · " + nr[4].slice(0,10);
+
+  document.getElementById("ngFacts").innerHTML = p.facts.map(f=>
+    '<div class="fact"><div class="k">'+f.k+'</div><div class="v">'+f.v+' <small>'+f.unit+'</small></div></div>'
+  ).join("");
+
+  document.getElementById("ngDiagram").innerHTML =
+    '<img src="'+p.diagram.src+'" alt="'+p.circuitName+' 서킷 레이아웃" loading="lazy">'+
+    '<div class="credit">서킷 다이어그램: <a href="'+p.diagram.creditUrl+'" target="_blank" rel="noopener">'+p.diagram.creditText+', Wikimedia Commons</a></div>';
+
+  document.getElementById("ngTyres").innerHTML = p.tyres.map(t=>{
+    const info = COMPOUND_INFO[t.key[0].toUpperCase()] || COMPOUND_INFO.U;
+    const border = info.border ? "border:1px solid var(--border-strong);" : "";
+    return '<div class="tyre-chip"><div class="disc" style="background:var('+info.v+');'+border+'color:'+info.ink+';">'+t.compound+'</div>'+
+      '<div class="lbl"><b>'+t.label+'</b>'+t.compound+'</div></div>';
+  }).join("");
+
+  document.getElementById("ngStrategy").innerHTML = p.strategyNotes.map(t=>'<p>'+t+'</p>').join("");
+
+  const related = NEWS_ITEMS.filter(n=>n.round === p.round);
+  const newsCard = document.getElementById("ngNewsCard");
+  if (related.length===0){ newsCard.hidden = true; }
+  else {
+    document.getElementById("ngNewsList").innerHTML = related.map(n=>
+      '<div class="news-item">'+
+        '<span class="news-tag">'+n.tag+'</span>'+
+        '<h3>'+n.title+'</h3>'+
+        '<p>'+n.body+'</p>'+
+        (n.url ? '<a href="'+n.url+'" target="_blank" rel="noopener">'+n.source+' →</a>' : '<span style="font-size:12px;color:var(--text-muted);">'+n.source+'</span>')+
+      '</div>'
+    ).join("");
+  }
+}
 
 // ---- leader tiles ----
 function leaderTile(el, leader, second, unit){
@@ -1328,6 +1451,7 @@ function wireLapHover(){
 }
 
 initReplay();
+renderNextGpTab();
 
 // ---- news ----
 (function(){
