@@ -368,6 +368,22 @@
       <div id="chartWrap" style="overflow-x:auto;"></div>
       <div class="legend" id="chartLegend"></div>
     </section>
+
+    <section class="card chart-card">
+      <div class="replay-head" style="margin-bottom:2px;">
+        <h2>시즌 포인트 추이</h2>
+        <div class="lapview-toggle" id="ppViewToggle">
+          <button type="button" class="lv-btn active" data-view="chart">그래프</button>
+          <button type="button" class="lv-btn" data-view="table">표</button>
+        </div>
+      </div>
+      <div class="cnt">라운드별 드라이버 누적 포인트</div>
+      <div class="driver-chips" id="ppChips"></div>
+      <div class="lapchart-wrap" id="ppChartWrap">
+        <div class="lap-tooltip" id="ppTooltip"></div>
+      </div>
+      <div class="lap-table-wrap" id="ppTableWrap" hidden></div>
+    </section>
   </div>
 
   <div class="tab-panel" data-tab="calendar" hidden>
@@ -485,6 +501,9 @@ const completedRaces = [
  [11,"Hungarian GP","Budapest","Hungary","2026-07-26","NOR","Lando Norris","mclaren","NOR","Lando Norris"],
  [12,"Dutch GP","Zandvoort","Netherlands","2026-08-23","NOR","Lando Norris","mclaren","NOR","Lando Norris"]
 ];
+
+// 라운드별 드라이버 누적 포인트 (Ergast/Jolpica driverstandings, 라운드마다 스냅샷)
+const POINTS_PROGRESS = {"rounds":[1,2,3,4,5,6,7,8,9,10,11,12],"points":{"RUS":[25,51,63,80,88,88,106,131,154,154,160,183],"ANT":[18,47,72,100,131,156,156,171,179,204,219,242],"LEC":[15,34,49,59,75,75,75,79,108,126,138,155],"HAM":[12,33,41,51,72,90,115,125,147,159,169,183],"NOR":[10,15,25,51,58,58,73,79,97,103,128,159],"VER":[8,8,12,26,43,43,55,73,76,91,109,112],"BEA":[6,17,17,17,18,18,18,18,18,18,18,18],"LIN":[4,4,4,4,5,11,13,14,20,22,23,23],"BOR":[2,2,2,2,2,2,2,2,6,10,10,10],"GAS":[1,9,15,16,20,35,41,41,42,42,42,44],"OCO":[0,0,1,1,1,3,3,3,3,3,3,3],"ALB":[0,0,0,1,1,5,5,5,5,5,5,5],"LAW":[0,8,10,10,16,24,28,30,39,39,43,49],"COL":[0,1,1,7,15,15,16,16,18,19,19,19],"SAI":[0,2,2,4,6,6,6,6,6,6,6,6],"PER":[0,0,0,0,0,0,0,0,0,0,0,0],"HAD":[0,4,4,4,14,26,34,42,52,60,68,68],"PIA":[0,3,21,43,48,58,68,80,82,92,92,104],"HUL":[0,0,0,0,0,0,0,0,0,0,2,6],"ALO":[0,0,0,0,0,1,1,1,1,1,1,3],"BOT":[0,0,0,0,0,0,0,0,0,0,0,0],"STR":[0,0,0,0,0,0,0,0,0,0,0,0],"TSU":[0,0,0,0,0,0,0,0,0,0,0,0]}};
 
 // round, raceName, locality, country, dateISO
 const upcomingRaces = [
@@ -624,6 +643,202 @@ teamStandings.forEach(r=>{
     '<span><span class="swatch" style="background:var(--t-'+t+')"></span>'+teamName(t)+'</span>'
   ).join("");
 })();
+
+// ---- season points progression (round-by-round) ----
+let ppActiveDrivers = new Set(["ANT","RUS","HAM","NOR","LEC"]);
+let ppViewMode = "chart";
+let ppChartState = null;
+
+function ppTeammateDashMap(){
+  const seen = {}, map = {};
+  driverStandings.forEach(d=>{
+    const idx = seen[d.team] || 0;
+    seen[d.team] = idx + 1;
+    map[d.code] = idx;
+  });
+  return map;
+}
+function ppRaceName(round){
+  const r = completedRaces.find(x=>x[0]===round);
+  return r ? r[1] : ("R"+round);
+}
+
+function renderPPChips(){
+  const dashMap = ppTeammateDashMap();
+  const wrap = document.getElementById("ppChips");
+  wrap.innerHTML = driverStandings.map(d=>{
+    const style = borderStyleFor(dashMap[d.code]||0);
+    return '<button type="button" class="dchip'+(ppActiveDrivers.has(d.code)?" on":"")+'" data-code="'+d.code+'"><span class="swline" style="border-top-style:'+style+';border-top-color:var(--t-'+d.team+')"></span>'+d.code+'</button>';
+  }).join("");
+  wrap.querySelectorAll(".dchip").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const code = btn.dataset.code;
+      if (ppActiveDrivers.has(code)) ppActiveDrivers.delete(code); else ppActiveDrivers.add(code);
+      btn.classList.toggle("on");
+      renderPPSection();
+    });
+  });
+}
+
+function renderPPSection(){
+  const chartWrap = document.getElementById("ppChartWrap");
+  const tableWrap = document.getElementById("ppTableWrap");
+  if (ppViewMode === "chart"){
+    chartWrap.hidden = false; tableWrap.hidden = true;
+    renderPPChart();
+  } else {
+    chartWrap.hidden = true; tableWrap.hidden = false;
+    renderPPTable();
+  }
+}
+
+function renderPPChart(){
+  const rounds = POINTS_PROGRESS.rounds;
+  const codes = [...ppActiveDrivers];
+  const leftPad=48, rightPad=14, topPad=12, botPad=26;
+  const plotW=680, plotH=240;
+  const svgW=leftPad+plotW+rightPad, svgH=topPad+plotH+botPad;
+  const wrap = document.getElementById("ppChartWrap");
+
+  if (codes.length===0){
+    wrap.innerHTML = '<div class="lap-tooltip" id="ppTooltip"></div><div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px;">위에서 드라이버를 선택하면 그래프가 표시됩니다.</div>';
+    ppChartState = null;
+    return;
+  }
+
+  let maxPts = 0;
+  codes.forEach(c=>{ (POINTS_PROGRESS.points[c]||[]).forEach(v=>{ if (v>maxPts) maxPts=v; }); });
+  const tMax = Math.ceil((maxPts+1)/25)*25 || 25;
+
+  function xFor(i){ return leftPad + i/(rounds.length-1)*plotW; }
+  function yFor(v){ return topPad + (1 - v/tMax)*plotH; }
+
+  let gridlines = "";
+  const steps=5;
+  for (let i=0;i<=steps;i++){
+    const v = tMax*i/steps;
+    const y = yFor(v);
+    gridlines += '<line x1="'+leftPad+'" y1="'+y+'" x2="'+(leftPad+plotW)+'" y2="'+y+'" stroke="var(--border)" stroke-width="1"/>';
+    gridlines += '<text x="'+(leftPad-8)+'" y="'+(y+4)+'" font-size="10" fill="var(--text-muted)" text-anchor="end" font-family="IBM Plex Mono, monospace">'+Math.round(v)+'</text>';
+  }
+  let xTicks = "";
+  rounds.forEach((r,i)=>{
+    xTicks += '<text x="'+xFor(i)+'" y="'+(topPad+plotH+18)+'" font-size="10" fill="var(--text-muted)" text-anchor="middle" font-family="IBM Plex Mono, monospace">R'+r+'</text>';
+  });
+
+  const dashMap = ppTeammateDashMap();
+  let lines = "", dots="";
+  const pointIndex = {};
+  codes.forEach(code=>{
+    const d = driverStandings.find(x=>x.code===code);
+    const teamId = d ? d.team : "haas";
+    const dash = dashArrayFor(dashMap[code]||0);
+    const series = POINTS_PROGRESS.points[code] || rounds.map(()=>0);
+    let dAttr = "";
+    const pts = {};
+    series.forEach((v,i)=>{
+      const x=xFor(i), y=yFor(v);
+      pts[rounds[i]] = [x,y,v];
+      dAttr += (i===0?" M":" L")+x.toFixed(1)+" "+y.toFixed(1);
+      dots += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.5" fill="var(--t-'+teamId+')"/>';
+    });
+    pointIndex[code] = { pts, teamId };
+    lines += '<path d="'+dAttr.trim()+'" fill="none" stroke="var(--t-'+teamId+')" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  });
+
+  const svg =
+    '<svg id="ppSvg" viewBox="0 0 '+svgW+' '+svgH+'" width="100%" style="max-width:'+svgW+'px;display:block;font-family:IBM Plex Sans,sans-serif;">'+
+      '<g>'+gridlines+'</g><g>'+xTicks+'</g>'+
+      '<line id="ppGuide" x1="0" y1="'+topPad+'" x2="0" y2="'+(topPad+plotH)+'" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,3" opacity="0"/>'+
+      '<g>'+lines+'</g><g>'+dots+'</g>'+
+      '<rect x="'+leftPad+'" y="'+topPad+'" width="'+plotW+'" height="'+plotH+'" fill="transparent" id="ppHoverRect" style="cursor:crosshair"/>'+
+    '</svg>'+
+    '<div class="lap-tooltip" id="ppTooltip"></div>';
+  wrap.innerHTML = svg;
+
+  ppChartState = { rounds, codes, leftPad, plotW, topPad, plotH, xFor, pointIndex };
+  wirePPHover();
+}
+
+function wirePPHover(){
+  const svg = document.getElementById("ppSvg");
+  const hoverRect = document.getElementById("ppHoverRect");
+  const guide = document.getElementById("ppGuide");
+  const tooltip = document.getElementById("ppTooltip");
+  if (!svg || !hoverRect) return;
+  const viewBox = svg.viewBox.baseVal;
+
+  function handleMove(evt){
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewBox.width / rect.width;
+    const svgX = (evt.clientX - rect.left) * scaleX;
+    const { leftPad, plotW, rounds, codes, pointIndex } = ppChartState;
+    const frac = Math.min(1, Math.max(0, (svgX - leftPad) / plotW));
+    const idx = Math.max(0, Math.min(rounds.length-1, Math.round(frac*(rounds.length-1))));
+    const round = rounds[idx];
+    const x = ppChartState.xFor(idx);
+    guide.setAttribute("x1", x); guide.setAttribute("x2", x); guide.setAttribute("opacity","1");
+
+    let rows = '<div class="hd">R'+round+' · '+ppRaceName(round)+'</div>';
+    codes.forEach(code=>{
+      const entry = pointIndex[code];
+      const p = entry.pts[round];
+      rows += '<div class="row"><span class="dot" style="background:var(--t-'+entry.teamId+')"></span>'+code+' <span class="num">'+(p?p[2]:"–")+'</span></div>';
+    });
+    tooltip.innerHTML = rows;
+    tooltip.style.opacity = "1";
+    const wrapRect = svg.parentElement.getBoundingClientRect();
+    const px = rect.left - wrapRect.left + x/scaleX;
+    tooltip.style.left = px + "px";
+    tooltip.style.top = "0px";
+  }
+  function handleLeave(){ guide.setAttribute("opacity","0"); tooltip.style.opacity="0"; }
+  hoverRect.addEventListener("mousemove", handleMove);
+  hoverRect.addEventListener("mouseleave", handleLeave);
+  hoverRect.addEventListener("touchmove", (e)=>{ if (e.touches[0]) handleMove(e.touches[0]); }, {passive:true});
+}
+
+function renderPPTable(){
+  const rounds = POINTS_PROGRESS.rounds;
+  const codes = [...ppActiveDrivers];
+  const wrap = document.getElementById("ppTableWrap");
+  if (codes.length===0){
+    wrap.innerHTML = '<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px;">위에서 드라이버를 선택하면 표가 표시됩니다.</div>';
+    return;
+  }
+  let head = '<tr><th class="num">Round</th>' + codes.map(code=>{
+    const d = driverStandings.find(x=>x.code===code);
+    const teamId = d ? d.team : "haas";
+    return '<th class="num"><span class="swatch" style="background:var(--t-'+teamId+')"></span>'+code+'</th>';
+  }).join("") + '</tr>';
+  let body = "";
+  rounds.forEach((r,i)=>{
+    let row = '<tr><td class="num">R'+r+' <span style="color:var(--text-muted);font-weight:400;">'+ppRaceName(r)+'</span></td>';
+    codes.forEach(code=>{
+      const v = (POINTS_PROGRESS.points[code]||[])[i];
+      row += '<td class="num">'+(v==null?"–":v)+'</td>';
+    });
+    row += '</tr>';
+    body += row;
+  });
+  wrap.innerHTML = '<div style="max-height:480px;overflow:auto;"><table class="lap-table"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+
+function wirePPViewToggle(){
+  document.querySelectorAll("#ppViewToggle .lv-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      if (btn.classList.contains("active")) return;
+      document.querySelectorAll("#ppViewToggle .lv-btn").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      ppViewMode = btn.dataset.view;
+      renderPPSection();
+    });
+  });
+}
+
+renderPPChips();
+wirePPViewToggle();
+renderPPSection();
 
 // ---- calendar strip ----
 const calWrap = document.getElementById("calendarStrip");
