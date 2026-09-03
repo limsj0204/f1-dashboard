@@ -70,6 +70,24 @@
   a{ color:inherit; }
 
   .wrap{ max-width:1180px; margin:0 auto; padding:0 20px 64px; }
+  .tab-panel[hidden]{ display:none; }
+
+  .tabbar{
+    display:flex; gap:4px; max-width:1180px; margin:0 auto; padding:0 20px 14px;
+    overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .tabbar::-webkit-scrollbar{ display:none; }
+  .tab-btn{
+    flex:none; font:600 13.5px "IBM Plex Sans",sans-serif; color:var(--text-secondary);
+    background:transparent; border:1px solid transparent; border-radius:9px;
+    padding:8px 14px; cursor:pointer; white-space:nowrap; transition:background .12s,color .12s;
+  }
+  .tab-btn:hover{ background:var(--surface-sunk); color:var(--text-primary); }
+  .tab-btn.active{
+    background:var(--surface-card); color:var(--text-primary); border-color:var(--border);
+    box-shadow:var(--shadow);
+  }
+  .tab-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
 
   /* ---- topbar ---- */
   .topbar{
@@ -244,90 +262,105 @@
   </div>
 </div>
 
+<nav class="tabbar" id="tabbar">
+  <button type="button" class="tab-btn active" data-tab="overview">개요</button>
+  <button type="button" class="tab-btn" data-tab="standings">순위</button>
+  <button type="button" class="tab-btn" data-tab="calendar">캘린더</button>
+  <button type="button" class="tab-btn" data-tab="replay">레이스 리플레이</button>
+</nav>
+
 <div class="wrap">
 
-  <section class="hero">
-    <div class="card next-race">
-      <span class="eyebrow">다음 그랑프리</span>
-      <div class="race-name" id="nrName">—</div>
-      <div class="race-loc" id="nrLoc">—</div>
-      <div class="countdown">
-        <span class="d" id="nrCountdown">D-0</span>
-        <span class="lbl">레이스 스타트까지 (한국 시간 기준)</span>
+  <div class="tab-panel" data-tab="overview">
+    <section class="hero">
+      <div class="card next-race">
+        <span class="eyebrow">다음 그랑프리</span>
+        <div class="race-name" id="nrName">—</div>
+        <div class="race-loc" id="nrLoc">—</div>
+        <div class="countdown">
+          <span class="d" id="nrCountdown">D-0</span>
+          <span class="lbl">레이스 스타트까지 (한국 시간 기준)</span>
+        </div>
+        <div class="sessions" id="nrSessions"></div>
       </div>
-      <div class="sessions" id="nrSessions"></div>
-    </div>
 
-    <div class="card stat-tile" id="driverLeaderCard"></div>
-    <div class="card stat-tile" id="teamLeaderCard"></div>
-  </section>
+      <div class="card stat-tile" id="driverLeaderCard"></div>
+      <div class="card stat-tile" id="teamLeaderCard"></div>
+    </section>
 
-  <section class="grid2">
-    <div class="card panel">
-      <h2>드라이버 순위</h2>
-      <div class="cnt">12라운드(네덜란드 GP) 종료 기준 · 23명</div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>순위</th><th>드라이버</th><th class="num">우승</th><th class="num">포인트</th></tr></thead>
-          <tbody id="driverTable"></tbody>
-        </table>
+    <section class="card lastrace">
+      <h2 id="lrTitle">최근 레이스 결과</h2>
+      <div class="podium" id="lrPodium"></div>
+      <div class="fastest" id="lrFastest"></div>
+    </section>
+  </div>
+
+  <div class="tab-panel" data-tab="standings" hidden>
+    <section class="grid2">
+      <div class="card panel">
+        <h2>드라이버 순위</h2>
+        <div class="cnt">12라운드(네덜란드 GP) 종료 기준 · 23명</div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>순위</th><th>드라이버</th><th class="num">우승</th><th class="num">포인트</th></tr></thead>
+            <tbody id="driverTable"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
-    <div class="card panel">
-      <h2>컨스트럭터 순위</h2>
-      <div class="cnt">12라운드 종료 기준 · 11팀</div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>순위</th><th>팀</th><th class="num">우승</th><th class="num">포인트</th></tr></thead>
-          <tbody id="teamTable"></tbody>
-        </table>
+      <div class="card panel">
+        <h2>컨스트럭터 순위</h2>
+        <div class="cnt">12라운드 종료 기준 · 11팀</div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>순위</th><th>팀</th><th class="num">우승</th><th class="num">포인트</th></tr></thead>
+            <tbody id="teamTable"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="card chart-card">
-    <h2>드라이버 포인트 TOP 10</h2>
-    <div class="cnt">막대 길이 = 시즌 누적 포인트</div>
-    <div id="chartWrap" style="overflow-x:auto;"></div>
-    <div class="legend" id="chartLegend"></div>
-  </section>
+    <section class="card chart-card">
+      <h2>드라이버 포인트 TOP 10</h2>
+      <div class="cnt">막대 길이 = 시즌 누적 포인트</div>
+      <div id="chartWrap" style="overflow-x:auto;"></div>
+      <div class="legend" id="chartLegend"></div>
+    </section>
+  </div>
 
-  <section class="card cal-card">
-    <h2>레이스 캘린더</h2>
-    <div class="cnt">전체 23라운드 · 완료된 라운드는 우승자·폴포지션 표시</div>
-    <div class="cal-scroll" id="calendarStrip"></div>
-  </section>
+  <div class="tab-panel" data-tab="calendar" hidden>
+    <section class="card cal-card">
+      <h2>레이스 캘린더</h2>
+      <div class="cnt">전체 23라운드 · 완료된 라운드는 우승자·폴포지션 표시</div>
+      <div class="cal-scroll" id="calendarStrip"></div>
+    </section>
+  </div>
 
-  <section class="card lastrace">
-    <h2 id="lrTitle">최근 레이스 결과</h2>
-    <div class="podium" id="lrPodium"></div>
-    <div class="fastest" id="lrFastest"></div>
-  </section>
+  <div class="tab-panel" data-tab="replay" hidden>
+    <section class="card" id="replayCard">
+      <div class="replay-head">
+        <h2>레이스 리플레이 · 랩타임 &amp; 타이어</h2>
+        <select class="race-select" id="raceSelect"></select>
+      </div>
+      <div class="cnt" id="replayCnt"></div>
 
-  <section class="card" id="replayCard">
-    <div class="replay-head">
-      <h2>레이스 리플레이 · 랩타임 &amp; 타이어</h2>
-      <select class="race-select" id="raceSelect"></select>
-    </div>
-    <div class="cnt" id="replayCnt"></div>
+      <div class="subhead">타이어 전략 (스틴트별 컴파운드)</div>
+      <div class="stint-chart" id="stintChart"></div>
+      <div class="compound-legend">
+        <span><i style="background:var(--c-soft)"></i>소프트 (S)</span>
+        <span><i style="background:var(--c-medium)"></i>미디엄 (M)</span>
+        <span><i style="background:var(--c-hard);border:1px solid var(--border-strong)"></i>하드 (H)</span>
+        <span><i style="background:var(--c-inter)"></i>인터미디엇 (I)</span>
+        <span><i style="background:var(--c-wet)"></i>웻 (W)</span>
+      </div>
 
-    <div class="subhead">타이어 전략 (스틴트별 컴파운드)</div>
-    <div class="stint-chart" id="stintChart"></div>
-    <div class="compound-legend">
-      <span><i style="background:var(--c-soft)"></i>소프트 (S)</span>
-      <span><i style="background:var(--c-medium)"></i>미디엄 (M)</span>
-      <span><i style="background:var(--c-hard);border:1px solid var(--border-strong)"></i>하드 (H)</span>
-      <span><i style="background:var(--c-inter)"></i>인터미디엇 (I)</span>
-      <span><i style="background:var(--c-wet)"></i>웻 (W)</span>
-    </div>
-
-    <div class="subhead">랩타임 비교</div>
-    <div class="driver-chips" id="driverChips"></div>
-    <div class="lapchart-wrap" id="lapChartWrap">
-      <div class="lap-tooltip" id="lapTooltip"></div>
-    </div>
-    <div class="lapchart-note">축 범위는 튀는 랩을 제외한 순수 페이스 기준. 하단 표시: <b>●</b> 핏스톱 랩 · <b>▲</b> 세이프티카/VSC 랩 · <b>■</b> 기타 아웃라이어 (모두 선이 끊기고, 마우스를 올리면 실제 랩타임이 툴팁으로 나와요). 같은 팀 두 드라이버는 실선/점선으로 구분돼요.</div>
-  </section>
+      <div class="subhead">랩타임 비교</div>
+      <div class="driver-chips" id="driverChips"></div>
+      <div class="lapchart-wrap" id="lapChartWrap">
+        <div class="lap-tooltip" id="lapTooltip"></div>
+      </div>
+      <div class="lapchart-note">축 범위는 튀는 랩을 제외한 순수 페이스 기준. 하단 표시: <b>●</b> 핏스톱 랩 · <b>▲</b> 세이프티카/VSC 랩 · <b>■</b> 기타 아웃라이어 (모두 선이 끊기고, 마우스를 올리면 실제 랩타임이 툴팁으로 나와요). 같은 팀 두 드라이버는 실선/점선으로 구분돼요.</div>
+    </section>
+  </div>
 
 </div>
 
@@ -862,4 +895,17 @@ function wireLapHover(){
 }
 
 initReplay();
+
+// ---- tab navigation ----
+(function(){
+  const btns = document.querySelectorAll(".tab-btn");
+  const panels = document.querySelectorAll(".tab-panel");
+  btns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const target = btn.dataset.tab;
+      btns.forEach(b=>b.classList.toggle("active", b===btn));
+      panels.forEach(p=>{ p.hidden = (p.dataset.tab !== target); });
+    });
+  });
+})();
 </script>
