@@ -1,4 +1,17 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>피트월</title>
+<meta name="description" content="2026 시즌 F1 드라이버·컨스트럭터 순위, 다음 그랑프리 카운트다운, 레이스 캘린더, 랩타임·타이어 리플레이를 한눈에 보는 개인용 대시보드">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-apple-touch.png">
+<meta name="theme-color" content="#F3F4F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0D0F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="피트월">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
@@ -249,6 +262,8 @@
   footer{ text-align:center; color:var(--text-muted); font-size:11.5px; padding:28px 20px 8px; }
   footer a{ color:var(--text-secondary); }
 </style>
+</head>
+<body>
 
 <div class="topbar">
   <div class="brand">
@@ -909,3 +924,14 @@ initReplay();
   });
 })();
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
