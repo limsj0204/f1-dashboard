@@ -229,6 +229,14 @@
   .stint-track{ position:relative; height:16px; background:var(--surface-sunk); border-radius:3px; }
   .stint-seg{ position:absolute; top:0; height:100%; display:flex; align-items:center; justify-content:center; font:700 9px "IBM Plex Mono",monospace; overflow:hidden; }
   .stint-divider{ position:absolute; top:-1px; bottom:-1px; width:3px; margin-left:-1.5px; background:var(--surface-sunk); z-index:2; }
+  .sc-band-layer{ position:absolute; left:106px; right:0; top:0; pointer-events:none; z-index:3; }
+  .sc-band{
+    position:absolute; top:0; bottom:0;
+    background:repeating-linear-gradient(45deg, rgba(245,166,35,.20) 0 4px, transparent 4px 8px);
+    border-left:1px dashed rgba(245,166,35,.65); border-right:1px dashed rgba(245,166,35,.65);
+  }
+  .sc-caption{ font-size:11.5px; color:var(--text-muted); margin-top:8px; }
+  .sc-caption b{ color:#c97a00; }
   .lap-axis{ display:grid; grid-template-columns:96px 1fr; margin-top:4px; }
   .lap-axis .ticks{ position:relative; height:14px; }
   .lap-axis .ticks span{ position:absolute; font-size:10px; color:var(--text-muted); font-family:"IBM Plex Mono",monospace; transform:translateX(-50%); }
@@ -380,6 +388,7 @@
 
       <div class="subhead">타이어 전략 (스틴트별 컴파운드)</div>
       <div class="stint-chart" id="stintChart"></div>
+      <div class="sc-caption" id="scCaption"></div>
       <div class="compound-legend">
         <span><i style="background:var(--c-soft)"></i>소프트 (S)</span>
         <span><i style="background:var(--c-medium)"></i>미디엄 (M)</span>
@@ -740,14 +749,32 @@ function stintsFor(driverLaps){
   return stints;
 }
 
+function scRanges(raceKey, laps, order){
+  const race = LAP_RACES[raceKey];
+  const flags = new Array(laps+1).fill(0);
+  order.forEach(code=>{
+    const dr = race.drivers[code];
+    (dr?.laps||[]).forEach(l=>{ if (l[6]) flags[l[0]] = 1; });
+  });
+  const ranges = [];
+  let start = null;
+  for (let i=1;i<=laps;i++){
+    if (flags[i] && start===null) start = i;
+    if (!flags[i] && start!==null){ ranges.push([start, i-1]); start=null; }
+  }
+  if (start!==null) ranges.push([start, laps]);
+  return ranges;
+}
+
 function renderStintChart(raceKey, laps){
   const meta = RACE_META[raceKey];
   const race = LAP_RACES[raceKey];
   const trackPxWidth = 534; // matches inner min-width (640) minus label col (96) and gap
-  let rows = "";
+  let rows = "", rowCount = 0;
   meta.finishOrder.forEach((code, i)=>{
     const dr = race.drivers[code];
     if (!dr) return;
+    rowCount++;
     const teamId = FF1_TEAM_ID[dr.team] || "haas";
     const stints = stintsFor(dr.laps);
     let segs = "";
@@ -769,8 +796,24 @@ function renderStintChart(raceKey, laps){
   for (let l=0; l<=laps; l+=10){
     ticks += '<span style="left:'+(l/laps*100)+'%">'+ (l===0?"1":l) +'</span>';
   }
+
+  const ranges = scRanges(raceKey, laps, meta.finishOrder);
+  let bandHtml = "";
+  if (ranges.length){
+    const bandsInner = ranges.map(([s,e])=>{
+      const leftPct = (s-1)/laps*100;
+      const widthPct = (e-s+1)/laps*100;
+      return '<div class="sc-band" style="left:'+leftPct+'%;width:'+widthPct+'%;" title="세이프티카/VSC 구간 · Lap '+s+'-'+e+'"></div>';
+    }).join("");
+    bandHtml = '<div class="sc-band-layer" style="height:'+(rowCount*26)+'px;">'+bandsInner+'</div>';
+  }
+  const scCaption = document.getElementById("scCaption");
+  scCaption.innerHTML = ranges.length
+    ? '<b>세이프티카/VSC</b> 구간: ' + ranges.map(([s,e]) => s===e ? ("Lap "+s) : ("Lap "+s+"–"+e)).join(", ")
+    : "이번 레이스에는 세이프티카/VSC가 없었어요.";
+
   document.getElementById("stintChart").innerHTML =
-    '<div style="min-width:640px">'+rows+
+    '<div style="min-width:640px;position:relative;">'+bandHtml+rows+
     '<div class="lap-axis"><div></div><div class="ticks">'+ticks+'</div></div></div>';
 }
 
