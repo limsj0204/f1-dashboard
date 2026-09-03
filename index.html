@@ -850,9 +850,9 @@ function renderLapTable(raceKey, laps){
     lapMaps[code] = { dr, map };
   });
 
-  let head = '<tr><th>Lap</th>' + codes.map(code=>{
+  let head = '<tr><th class="num">Lap</th>' + codes.map(code=>{
     const teamId = FF1_TEAM_ID[lapMaps[code].dr?.team] || "haas";
-    return '<th><span class="swatch" style="background:var(--t-'+teamId+')"></span>'+code+'</th>';
+    return '<th class="num"><span class="swatch" style="background:var(--t-'+teamId+')"></span>'+code+'</th>';
   }).join("") + '</tr>';
 
   let body = "";
