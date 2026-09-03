@@ -267,7 +267,7 @@
   .lap-table-wrap thead th:first-child{ z-index:2; }
   .lap-table-wrap .swatch{ width:8px; height:8px; display:inline-block; margin-right:5px; border-radius:2px; vertical-align:1px; }
   .lap-cell-empty{ color:var(--text-muted); }
-  .lap-tag{ font-size:9px; font-weight:700; color:var(--text-muted); background:var(--surface-sunk); border:1px solid var(--border); border-radius:4px; padding:0 4px; margin-left:4px; }
+  .lap-tag{ font-size:9px; font-weight:700; color:var(--text-muted); background:var(--surface-sunk); border:1px solid var(--border); border-radius:4px; padding:0 4px; margin-right:4px; }
 
   .lapchart-wrap{ position:relative; overflow-x:auto; }
   .lap-tooltip{
@@ -864,8 +864,8 @@ function renderLapTable(raceKey, laps){
         row += '<td class="num lap-cell-empty">–</td>';
       } else {
         const [,time,,,,pitIn,sc] = l;
-        const tag = pitIn ? ' <span class="lap-tag">P</span>' : (sc ? ' <span class="lap-tag">SC</span>' : '');
-        row += '<td class="num">'+fmtLapTime(time)+tag+'</td>';
+        const tag = pitIn ? '<span class="lap-tag">P</span> ' : (sc ? '<span class="lap-tag">SC</span> ' : '');
+        row += '<td class="num">'+tag+fmtLapTime(time)+'</td>';
       }
     });
     row += '</tr>';
