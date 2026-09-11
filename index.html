@@ -572,17 +572,17 @@ const TEAM_NAMES = {
 };
 
 const driverStandings = [
- {pos:1,code:"ANT",name:"Andrea Kimi Antonelli",team:"mercedes",points:268,wins:7},
+ {pos:1,code:"ANT",name:"Andrea Kimi Antonelli",team:"mercedes",points:267,wins:7},
  {pos:2,code:"RUS",name:"George Russell",team:"mercedes",points:201,wins:2},
  {pos:3,code:"HAM",name:"Lewis Hamilton",team:"ferrari",points:191,wins:1},
  {pos:4,code:"NOR",name:"Lando Norris",team:"mclaren",points:171,wins:2},
  {pos:5,code:"LEC",name:"Charles Leclerc",team:"ferrari",points:155,wins:1},
  {pos:6,code:"VER",name:"Max Verstappen",team:"red_bull",points:127,wins:0},
- {pos:7,code:"PIA",name:"Oscar Piastri",team:"mclaren",points:114,wins:0},
- {pos:8,code:"HAD",name:"Isack Hadjar",team:"red_bull",points:68,wins:0},
- {pos:9,code:"GAS",name:"Pierre Gasly",team:"alpine",points:50,wins:0},
- {pos:10,code:"LAW",name:"Liam Lawson",team:"rb",points:49,wins:0},
- {pos:11,code:"LIN",name:"Arvid Lindblad",team:"rb",points:27,wins:0},
+ {pos:7,code:"PIA",name:"Oscar Piastri",team:"mclaren",points:116,wins:0},
+ {pos:8,code:"HAD",name:"Isack Hadjar",team:"red_bull",points:71,wins:0},
+ {pos:9,code:"LAW",name:"Liam Lawson",team:"rb",points:51,wins:0},
+ {pos:10,code:"GAS",name:"Pierre Gasly",team:"alpine",points:41,wins:0},
+ {pos:11,code:"LIN",name:"Arvid Lindblad",team:"rb",points:29,wins:0},
  {pos:12,code:"COL",name:"Franco Colapinto",team:"alpine",points:21,wins:0},
  {pos:13,code:"BEA",name:"Oliver Bearman",team:"haas",points:18,wins:0},
  {pos:14,code:"BOR",name:"Gabriel Bortoleto",team:"audi",points:10,wins:0},
@@ -598,12 +598,12 @@ const driverStandings = [
 ];
 
 const teamStandings = [
- {pos:1,team:"mercedes",points:469,wins:9},
+ {pos:1,team:"mercedes",points:468,wins:9},
  {pos:2,team:"ferrari",points:346,wins:2},
- {pos:3,team:"mclaren",points:285,wins:2},
- {pos:4,team:"red_bull",points:201,wins:0},
- {pos:5,team:"rb",points:71,wins:0},
- {pos:6,team:"alpine",points:71,wins:0},
+ {pos:3,team:"mclaren",points:287,wins:2},
+ {pos:4,team:"red_bull",points:204,wins:0},
+ {pos:5,team:"rb",points:75,wins:0},
+ {pos:6,team:"alpine",points:62,wins:0},
  {pos:7,team:"haas",points:21,wins:0},
  {pos:8,team:"audi",points:16,wins:0},
  {pos:9,team:"williams",points:11,wins:0},
@@ -629,15 +629,15 @@ const completedRaces = [
 ];
 
 // 라운드별 드라이버 누적 포인트 (Ergast/Jolpica driverstandings, 라운드마다 스냅샷)
-const POINTS_PROGRESS = {"rounds":[1,2,3,4,5,6,7,8,9,10,11,12,13],"points":{"RUS":[25,51,63,80,88,88,106,131,154,154,160,183,201],"ANT":[18,47,72,100,131,156,156,171,179,204,219,242,268],"LEC":[15,34,49,59,75,75,75,79,108,126,138,155,155],"HAM":[12,33,41,51,72,90,115,125,147,159,169,183,191],"NOR":[10,15,25,51,58,58,73,79,97,103,128,159,171],"VER":[8,8,12,26,43,43,55,73,76,91,109,112,127],"BEA":[6,17,17,17,18,18,18,18,18,18,18,18,18],"LIN":[4,4,4,4,5,11,13,14,20,22,23,23,27],"BOR":[2,2,2,2,2,2,2,2,6,10,10,10,10],"GAS":[1,9,15,16,20,35,41,41,42,42,42,44,50],"OCO":[0,0,1,1,1,3,3,3,3,3,3,3,3],"ALB":[0,0,0,1,1,5,5,5,5,5,5,5,5],"LAW":[0,8,10,10,16,24,28,30,39,39,43,49,49],"COL":[0,1,1,7,15,15,16,16,18,19,19,19,21],"SAI":[0,2,2,4,6,6,6,6,6,6,6,6,6],"PER":[0,0,0,0,0,0,0,0,0,0,0,0,0],"HAD":[0,4,4,4,14,26,34,42,52,60,68,68,68],"PIA":[0,3,21,43,48,58,68,80,82,92,92,104,114],"HUL":[0,0,0,0,0,0,0,0,0,0,2,6,6],"ALO":[0,0,0,0,0,1,1,1,1,1,1,3,3],"BOT":[0,0,0,0,0,0,0,0,0,0,0,0,0],"STR":[0,0,0,0,0,0,0,0,0,0,0,0,0],"TSU":[0,0,0,0,0,0,0,0,0,0,0,0,1]}};
+const POINTS_PROGRESS = {"rounds":[1,2,3,4,5,6,7,8,9,10,11,12,13],"points":{"RUS":[25,51,63,80,88,88,106,131,154,154,160,183,201],"ANT":[18,47,72,100,131,156,156,171,179,204,219,242,267],"LEC":[15,34,49,59,75,75,75,79,108,126,138,155,155],"HAM":[12,33,41,51,72,90,115,125,147,159,169,183,191],"NOR":[10,15,25,51,58,58,73,79,97,103,128,159,171],"VER":[8,8,12,26,43,43,55,73,76,91,109,112,127],"BEA":[6,17,17,17,18,18,18,18,18,18,18,18,18],"LIN":[4,4,4,4,5,11,13,14,20,22,23,23,29],"BOR":[2,2,2,2,2,2,2,2,6,10,10,10,10],"GAS":[1,9,15,16,20,35,41,41,42,42,42,44,41],"OCO":[0,0,1,1,1,3,3,3,3,3,3,3,3],"ALB":[0,0,0,1,1,5,5,5,5,5,5,5,5],"LAW":[0,8,10,10,16,24,28,30,39,39,43,49,51],"COL":[0,1,1,7,15,15,16,16,18,19,19,19,21],"SAI":[0,2,2,4,6,6,6,6,6,6,6,6,6],"PER":[0,0,0,0,0,0,0,0,0,0,0,0,0],"HAD":[0,4,4,4,14,26,34,42,52,60,68,68,71],"PIA":[0,3,21,43,48,58,68,80,82,92,92,104,116],"HUL":[0,0,0,0,0,0,0,0,0,0,2,6,6],"ALO":[0,0,0,0,0,1,1,1,1,1,1,3,3],"BOT":[0,0,0,0,0,0,0,0,0,0,0,0,0],"STR":[0,0,0,0,0,0,0,0,0,0,0,0,0],"TSU":[0,0,0,0,0,0,0,0,0,0,0,0,1]}};
 
-const NEWS_UPDATED_AT = "2026-09-07";
+const NEWS_UPDATED_AT = "2026-09-12";
 const NEWS_ITEMS = [
   {
     tag: "R13 결과",
     round: 13,
-    title: "안토넬리, 몬자에서 시즌 7승째 - 개슬리 폴은 7위로 마감",
-    body: "퀄리파잉에서 깜짝 폴을 잡았던 알핀의 피에르 개슬리는 결승에서 7위로 내려앉았고, 안토넬리가 러셀을 3.9초 차로 제치고 우승했다. 마지막 랩(53랩)에 세운 1:23.504가 이 날의 패스티드랩이었다.",
+    title: "안토넬리, 그리드 19위에서 우승까지 - 몬자 대역전극",
+    body: "퀄리파잉 직후 엔진 교체 그리드 페널티가 확정되며 19위로 밀려났던 안토넬리가 결승에서 러셀을 3.9초 차로 제치고 우승했다. 깜짝 폴을 잡았던 알핀의 피에르 개슬리는 7위로 마감. 마지막 랩(53랩)에 세운 1:23.504가 이 날의 패스티드랩이었다.",
     source: "FastF1 레이스 데이터 분석", url: ""
   },
   {
@@ -656,13 +656,13 @@ const NEWS_ITEMS = [
   {
     tag: "챔피언십",
     title: "메르세데스, 컨스트럭터 챔피언십 압도적 선두",
-    body: "메르세데스가 469점으로 2위 페라리(346점)에 123점 차 리드를 잡으며 새 규정 도입 첫 시즌의 가장 확실한 승자로 떠올랐다.",
+    body: "메르세데스가 468점으로 2위 페라리(346점)에 122점 차 리드를 잡으며 새 규정 도입 첫 시즌의 가장 확실한 승자로 떠올랐다.",
     source: "대시보드 순위 탭 기준", url: ""
   },
   {
     tag: "챔피언십",
-    title: "안토넬리, 러셀에 67점 차 선두 유지",
-    body: "13라운드까지 안토넬리가 268점으로 선두, 러셀이 201점으로 2위다. 7승 6폴로 루키 시즌치고 이례적인 페이스를 이어가고 있다.",
+    title: "안토넬리, 러셀에 66점 차 선두 유지",
+    body: "13라운드까지 안토넬리가 267점으로 선두, 러셀이 201점으로 2위다. 7승 6폴로 루키 시즌치고 이례적인 페이스를 이어가고 있다.",
     source: "대시보드 순위 탭 기준", url: ""
   }
 ];
@@ -1132,8 +1132,9 @@ const LAP_RACES = {"r12":{"year":2026,"round":12,"raceName":"Dutch Grand Prix","
 // [pos, code, Q1, Q2, Q3] - Ergast/Jolpica qualifying results
 // 실제 스타팅 그리드(그리드 페널티 반영). Ergast/FastF1에서 못 받아온 라운드는 키를 아예 뺌 -> 포지션 차트가 0랩 없이 1랩부터 시작
 const GRID_POSITIONS = {
-  r12: {NOR:1,RUS:2,ANT:3,PIA:4,HAM:5,LEC:6,VER:7,LAW:8,BOR:9,LIN:10,GAS:11,TSU:12,HUL:13,COL:14,OCO:15,ALB:16,SAI:17,ALO:18,STR:19,BEA:20,BOT:21,PER:22}
-  // r13: 이탈리아 GP는 안토넬리 그리드 페널티 적용 여부가 Ergast에 아직 안 올라와서 그리드 정보 없이 1랩부터 표시
+  r12: {NOR:1,RUS:2,ANT:3,PIA:4,HAM:5,LEC:6,VER:7,LAW:8,BOR:9,LIN:10,GAS:11,TSU:12,HUL:13,COL:14,OCO:15,ALB:16,SAI:17,ALO:18,STR:19,BEA:20,BOT:21,PER:22},
+  // 안토넬리 그리드 페널티 공식 확정: 폴에서 19위로 강등, 거기서 우승
+  r13: {GAS:1,RUS:2,LEC:3,HAM:4,VER:5,PIA:6,COL:7,NOR:8,LIN:9,BOR:10,BEA:11,HUL:12,SAI:13,OCO:14,TSU:15,BOT:16,PER:17,STR:18,ANT:19,ALB:20,ALO:21,LAW:22}
 };
 
 const QUALI_RESULTS = {
