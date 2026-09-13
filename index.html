@@ -1174,7 +1174,7 @@ function renderQualiTable(raceKey){
     const teamId = d ? d.team : "haas";
     const best = parseQualiTime(q3 || q2 || q1);
     const gap = !q1 ? "–" : pos===1 ? '<span class="pole-tag">POLE</span>' : ("+" + (best - poleTime).toFixed(3));
-    const outTag = !q1 ? '<span class="out-tag">기록 없음</span>' : !q2 ? '<span class="out-tag">Q1 탈락</span>' : (!q3 ? '<span class="out-tag">Q2 탈락</span>' : '');
+    const outTag = !q2 ? '<span class="out-tag">Q1 탈락</span>' : (!q3 ? '<span class="out-tag">Q2 탈락</span>' : '');
     return '<tr class="'+(pos===1?"pole":"")+'">'+
       '<td class="pos num">'+pos+'</td>'+
       '<td><div class="drvcell"><span class="swatch" style="background:var(--t-'+teamId+')"></span>'+
