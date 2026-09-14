@@ -347,8 +347,11 @@ def process_round(race, rnd, now, state):
     changed = False
 
     def ensure_gp_name():
-        if rnd not in gp_names:
-            gp_names[rnd] = short_gp_name(race["raceName"]) + f" ({race['Circuit']['Location']['locality']})"
+        # gp_names is loaded from JSON, whose object keys are always strings -
+        # use str(rnd) consistently or a duplicate int-keyed entry sneaks in
+        # when re-serialized (silently corrupts the object literal).
+        if str(rnd) not in gp_names:
+            gp_names[str(rnd)] = short_gp_name(race["raceName"]) + f" ({race['Circuit']['Location']['locality']})"
 
     # -- practice sessions --
     for field, suffix, label in SESSION_FIELD_MAP:
@@ -411,8 +414,12 @@ def process_round(race, rnd, now, state):
             grid_positions[race_key] = {
                 r["Driver"]["code"]: int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
             }
+            # keep qualiOnly=True until the FastF1 lap-data block below actually
+            # lands real per-lap data - promoting this too early crashes the
+            # replay UI, which indexes LAP_RACES[key].drivers unconditionally
+            # once qualiOnly is gone (see renderDriverChips and friends).
             race_meta[race_key] = {
-                "round": rnd, "session": "레이스", "type": "race",
+                "round": rnd, "session": "레이스", "type": "race", "qualiOnly": True,
                 "finishOrder": finish_order, "defaultOn": finish_order[:3],
             }
 
@@ -484,6 +491,8 @@ def process_round(race, rnd, now, state):
         data = ff1_fetch(2026, rnd, "R")
         if data:
             lap_races[race_key] = data
+            if race_key in race_meta:
+                race_meta[race_key].pop("qualiOnly", None)  # promote: replay charts can render now
             changed = True
             print(f"  OK - {len(data['drivers'])} drivers")
         else:
