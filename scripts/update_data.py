@@ -134,17 +134,23 @@ def parse_iso(date_str, time_str):
 
 # ---------- FastF1 ----------
 
-def ff1_fetch(year, rnd, session_type):
+def ff1_fetch(year, rnd, session_type, tries=3):
     import fastf1
     os.makedirs(CACHE_DIR, exist_ok=True)
     fastf1.Cache.enable_cache(CACHE_DIR)
-    try:
-        session = fastf1.get_session(year, rnd, session_type)
-        session.load(laps=True, telemetry=False, weather=False, messages=False)
-        laps = session.laps
-    except Exception as e:
-        print(f"  ! FastF1 data not ready for R{rnd} {session_type}: {e}")
-        return None
+    laps = None
+    for attempt in range(tries):
+        try:
+            session = fastf1.get_session(year, rnd, session_type)
+            session.load(laps=True, telemetry=False, weather=False, messages=False)
+            laps = session.laps
+            break
+        except Exception as e:
+            if attempt == tries - 1:
+                print(f"  ! FastF1 data not ready for R{rnd} {session_type} (after {tries} tries): {e}")
+                return None
+            print(f"  ! FastF1 fetch attempt {attempt+1} failed for R{rnd} {session_type}, retrying: {e}")
+            time.sleep(5)
     if laps is None or len(laps) == 0:
         return None
 
