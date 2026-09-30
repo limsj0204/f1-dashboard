@@ -559,7 +559,7 @@
 </div>
 
 <footer>
-  데이터 출처: <a href="https://github.com/jolpica/jolpica-f1" target="_blank" rel="noopener">Jolpica-F1 API</a> (Ergast 후속) · 2026-09-03 기준 수동 스냅샷 · 새 라운드가 끝나면 다시 요청해 갱신하세요.
+  데이터 출처: <a href="https://github.com/jolpica/jolpica-f1" target="_blank" rel="noopener">Jolpica-F1 API</a> (Ergast 후속), FastF1 · 순위·결과는 자동 갱신, 뉴스와 다음 그랑프리 프리뷰는 수동 갱신
 </footer>
 
 <script>
@@ -582,13 +582,28 @@ const completedRaces = [[1,"Australian GP","Melbourne","Australia","2026-03-08",
 // 라운드별 드라이버 누적 포인트 (Ergast/Jolpica driverstandings, 라운드마다 스냅샷)
 const POINTS_PROGRESS = {"rounds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],"points":{"RUS":[25,51,63,80,88,88,106,131,154,154,160,183,201,211,236],"ANT":[18,47,72,100,131,156,156,171,179,204,219,242,267,292,302],"LEC":[15,34,49,59,75,75,75,79,108,126,138,155,155,167,179],"HAM":[12,33,41,51,72,90,115,125,147,159,169,183,191,191,199],"NOR":[10,15,25,51,58,58,73,79,97,103,128,159,171,186,186],"VER":[8,8,12,26,43,43,55,73,76,91,109,112,127,145,163],"BEA":[6,17,17,17,18,18,18,18,18,18,18,18,18,18,20],"LIN":[4,4,4,4,5,13,15,16,22,24,25,25,29,31,37],"BOR":[2,2,2,2,2,2,2,2,6,10,10,10,10,10,10],"GAS":[1,9,15,16,20,26,32,32,33,33,33,35,41,41,41],"OCO":[0,0,1,1,1,3,3,3,3,3,3,3,3,3,7],"ALB":[0,0,0,1,1,5,5,5,5,5,5,5,5,5,5],"LAW":[0,8,10,10,16,26,30,32,41,41,45,51,51,59,59],"COL":[0,1,1,7,15,15,16,16,18,19,19,19,21,27,27],"SAI":[0,2,2,4,6,6,6,6,6,6,6,6,6,6,7],"PER":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"HAD":[0,4,4,4,14,29,37,45,55,63,71,71,71,71,86],"PIA":[0,3,21,43,48,60,70,82,84,94,94,106,116,120,120],"HUL":[0,0,0,0,0,0,0,0,0,0,2,6,6,7,7],"ALO":[0,0,0,0,0,1,1,1,1,1,1,3,3,3,3],"BOT":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"STR":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"TSU":[0,0,0,0,0,0,0,0,0,0,0,0,1,1,1]}};
 
-const NEWS_UPDATED_AT = "2026-09-13";
+const NEWS_UPDATED_AT = "2026-09-30";
 const NEWS_ITEMS = [
   {
-    tag: "드라이버 교체",
-    title: "하드자르 손목 부상, 3경기 연속 결장 - 로슨·츠노다 연쇄 이동",
-    body: "레드불의 이삭 하드자르가 손목 부상으로 네덜란드 GP부터 스페인 GP까지 3경기 연속 결장 중이다. 로슨이 하드자르 대신 레드불 시트를 메웠고, 로슨이 비운 레이싱 불스 자리는 리저브 드라이버 츠노다가 채웠다 - 최근 리플레이 탭에서 레이스별로 팀 표기가 계속 바뀌는 이유가 이거다.",
-    source: "Crash.net", url: "https://www.crash.net/f1/news/1104507/1/f1-2026-spanish-grand-prix-full-starting-grid-first-race-madrid"
+    round: 16,
+    tag: "그랑프리 뉴스",
+    title: "바레인 GP가 왜 말레이시아에서? - 중동 정세로 취소된 레이스, 세팡으로 이전",
+    body: "원래 4월 바레인에서 열릴 예정이던 바레인 GP는 2월 말 발발한 중동 전쟁의 안전 문제로 취소됐다. F1과 FIA, 바레인·말레이시아 정부 합의에 따라 이번 주말 세팡에서 '바레인 GP'라는 이름 그대로 열리며, 티켓 가격 결정권과 수익은 바레인이 가져간다. F1의 말레이시아 복귀는 2017년 이후 처음이다.",
+    source: "Wikipedia", url: "https://en.wikipedia.org/wiki/2026_Bahrain_Grand_Prix"
+  },
+  {
+    round: 16,
+    tag: "그랑프리 뉴스",
+    title: "FIA, 세팡에 스트레이트 모드 4개 구간 확정 - 세팡에서 액티브 에어로는 처음",
+    body: "FIA가 이번 주말 세팡의 스트레이트 모드 구간을 4곳으로 확정했다. 결승 직선(1번 코너 앞)과 15번 헤어핀으로 이어지는 백스트레이트, 3~4번·8~9번 코너 사이 짧은 직선이 대상이다. 세팡에서 액티브 에어로가 쓰이는 것은 이번이 처음이라, 금요일 연습 데이터가 특히 중요해졌다.",
+    source: "PlanetF1", url: "https://www.planetf1.com/news/fia-bahrain-grand-prix-2026-sepang-active-aero"
+  },
+  {
+    round: 16,
+    tag: "페널티",
+    title: "콜라핀토, 바쿠 충돌 책임으로 5그리드 강등",
+    body: "알핀의 프랑코 콜라핀토가 아제르바이잔 GP에서 충돌을 일으킨 책임으로 이번 주말 5그리드 페널티를 안고 출발한다. 바쿠에서 3위로 복귀 레이스를 마친 하드자르(레드불)는 손목 부상에서 돌아와 정상 출전한다.",
+    source: "Wikipedia · Formula1.com", url: "https://en.wikipedia.org/wiki/2026_Bahrain_Grand_Prix"
   },
   {
     tag: "드라이버 마켓",
@@ -612,26 +627,26 @@ const NEWS_ITEMS = [
 
 // 다음 그랑프리 프리뷰: 매 라운드 끝나고 다음 라운드 기준으로 다시 조사해서 갱신
 const NEXT_RACE_PREVIEW = {
-  round: 15,
-  circuitName: "Baku City Circuit",
-  diagram: { src: "assets/circuits/baku.svg", creditText: "HumanBodyPiloter5, CC0", creditUrl: "https://commons.wikimedia.org/wiki/File:Baku_Formula_One_circuit_map.svg" },
+  round: 16,
+  circuitName: "Sepang International Circuit",
+  diagram: { src: "assets/circuits/sepang.svg", creditText: "Will Pittenger, CC BY-SA 3.0", creditUrl: "https://commons.wikimedia.org/wiki/File:Sepang.svg" },
   facts: [
-    { k: "랩 길이", v: "6.003", unit: "km" },
-    { k: "레이스 랩수", v: "51", unit: "랩" },
-    { k: "총 거리", v: "306.0", unit: "km" },
-    { k: "랩 레코드", v: "1:43.009", unit: "Leclerc · 2019" },
-    { k: "첫 그랑프리", v: "2016", unit: "년" },
-    { k: "코너 수", v: "20", unit: "개" }
+    { k: "랩 길이", v: "5.543", unit: "km" },
+    { k: "레이스 랩수", v: "56", unit: "랩" },
+    { k: "총 거리", v: "310.4", unit: "km" },
+    { k: "랩 레코드", v: "1:34.080", unit: "Vettel · 2017" },
+    { k: "첫 그랑프리", v: "1999", unit: "년" },
+    { k: "코너 수", v: "15", unit: "개" }
   ],
   tyres: [
-    { compound: "C5", label: "소프트", key: "soft" },
-    { compound: "C4", label: "미디엄", key: "medium" },
-    { compound: "C3", label: "하드", key: "hard" }
+    { compound: "C4", label: "소프트", key: "soft" },
+    { compound: "C3", label: "미디엄", key: "medium" },
+    { compound: "C2", label: "하드", key: "hard" }
   ],
   strategyNotes: [
-    "피렐리가 2026년 라인업 중 가장 부드러운 조합(C3-C4-C5)을 바쿠에 가져왔다. 그립이 낮은 시가지 노면이 타이어에 주는 부하 자체가 작기 때문에, 가장 소프트한 컴파운드로도 마모 걱정 없이 쓸 수 있다는 판단이다.",
-    "F1에서 가장 긴 직선(네프칠라르 애비뉴, 2.2km)과 폭 7.6m의 성벽 구간(8~12번 코너)이 극단적으로 대비되는 트랙이라, 컴파운드 선택보다 안전차 등장 여부가 전략을 더 크게 좌우하는 서킷으로 꼽힌다.",
-    "저마모 조합 특성상 원스톱이 유력하지만, 벽이 가까운 시가지 서킷 특성상 세이프티카·VSC가 자주 나와서 그 타이밍에 무료 피트스톱을 노리는 팀이 많아 실제로는 전략이 갈리는 경우가 잦다."
+    "피렐리는 5단계 라인업의 가운데인 C2-C3-C4를 가져왔다. 바로 앞 바쿠·다음 싱가포르의 C3-C4-C5보다 한 단계 단단한 조합으로, 원스톱과 투스톱의 성능 차이를 줄여 전략이 갈리게 만들려는 선택이다. 세트 배분은 하드 2, 미디엄 3, 소프트 8세트다.",
+    "노면이 마모가 심한 편인데 2017년 이후 재포장이 없었다. 여기에 33도 안팎의 더위와 높은 습도가 겹쳐 타이어 관리가 바쿠와는 전혀 다른 과제가 된다.",
+    "2017년 이후 처음 열리는 데다 현행 액티브 에어로 차량으로는 처음 달리는 트랙이라 참고할 데이터가 거의 없어, 금요일 연습 주행이 전략의 출발점이 된다. 주말 내내 소나기 가능성이 있는 것도 변수다."
   ]
 };
 
@@ -1039,7 +1054,7 @@ const COMPOUND_INFO = {
   W:{v:"--c-wet", label:"W", ink:"#fff"},
   U:{v:"--c-unk", label:"?", ink:"var(--text-muted)"}
 };
-const GP_NAMES = {"12":"네덜란드 GP (Zandvoort)","13":"이탈리아 GP (Monza)","14":"스페인 GP (Madrid)","15":"Azerbaijan GP (Baku)"};
+const GP_NAMES = {"12":"네덜란드 GP (Zandvoort)","13":"이탈리아 GP (Monza)","14":"스페인 GP (Madrid)","15":"아제르바이잔 GP (Baku)"};
 const SESSION_ORDER = ["FP1","FP2","FP3","레이스"];
 
 const RACE_META = {"r12":{"round":12,"session":"레이스","type":"race","finishOrder":["NOR","ANT","RUS","HAM","LEC","PIA","LAW","HUL","ALO","GAS","TSU","LIN","BOR","COL","PER","SAI","ALB","BOT","OCO","STR","BEA","VER"],"defaultOn":["NOR","ANT","RUS"]},"r13fp1":{"round":13,"session":"FP1","type":"practice","finishOrder":["LEC","HAM","RUS","LAW","ANT","NOR","LIN","BOR","COL","ARO","PIA","TSU","HUL","BEA","BRO","SAI","IWA","ALO","OCO","BOT","STR","HER"],"defaultOn":["LEC","HAM","RUS","ANT"]},"r13fp2":{"round":13,"session":"FP2","type":"practice","finishOrder":["RUS","LEC","ANT","NOR","HAM","PIA","LIN","BEA","VER","TSU","COL","LAW","HUL","GAS","BOR","ALB","SAI","OCO","ALO","PER","BOT","STR"],"defaultOn":["LEC","HAM","RUS","ANT"]},"r13fp3":{"round":13,"session":"FP3","type":"practice","finishOrder":["RUS","HAM","VER","ANT","NOR","LEC","LIN","PIA","GAS","COL","HUL","LAW","BOR","BEA","TSU","SAI","OCO","ALB","ALO","BOT","PER","STR"],"defaultOn":["LEC","HAM","RUS","ANT"]},"r13":{"round":13,"session":"레이스","type":"race","finishOrder":["ANT","RUS","VER","NOR","PIA","HAM","GAS","LIN","COL","TSU","BOR","HUL","SAI","LAW","BEA","OCO","ALB","PER","BOT","STR","ALO","LEC"],"defaultOn":["ANT","RUS","VER"]},"r14fp1":{"round":14,"session":"FP1","type":"practice","finishOrder":["RUS","ANT","LEC","HAM","VER","NOR","LIN","PIA","HUL","LAW","BOR","GAS","OCO","COL","ALO","BEA","SAI","TSU","STR","ALB","PER","BOT"],"defaultOn":["RUS","ANT","LEC","HAM"]},"r14fp2":{"round":14,"session":"FP2","type":"practice","finishOrder":["ANT","LEC","HAM","LIN","RUS","VER","PIA","TSU","OCO","LAW","GAS","HUL","BOR","BEA","COL","SAI","ALO","ALB","PER","STR","BOT","NOR"],"defaultOn":["ANT","LEC","HAM","RUS"]},"r14fp3":{"round":14,"session":"FP3","type":"practice","finishOrder":["ANT","LEC","PIA","NOR","VER","RUS","LAW","HUL","HAM","BOR","COL","OCO","BEA","LIN","TSU","GAS","ALO","SAI","STR","PER","BOT","ALB"],"defaultOn":["ANT","LEC","PIA","NOR"]},"r14":{"round":14,"session":"레이스","type":"race","finishOrder":["ANT","VER","NOR","LEC","RUS","LAW","COL","PIA","LIN","HUL","OCO","GAS","BOR","TSU","ALB","BEA","ALO","BOT","SAI","PER","STR","HAM"],"defaultOn":["ANT","VER","NOR"]},"r12fp1":{"round":12,"session":"FP1","type":"practice","finishOrder":["ANT","NOR","RUS","HAM","LEC","PIA","HUL","GAS","BOR","LIN","VER","ALO","COL","LAW","BEA","OCO","TSU","STR","ALB","BOT","PER","SAI"],"defaultOn":["ANT","NOR","RUS","HAM"]},"r15fp1":{"round":15,"session":"FP1","type":"practice","finishOrder":["RUS","VER","LEC","HAM","ANT","PIA","LAW","LIN","OCO","BOR","HUL","SAI","ALB","NOR","BEA","GAS","PER","COL","ALO","HAD","STR","BOT"],"defaultOn":["RUS","VER","LEC","HAM"]},"r15fp2":{"round":15,"session":"FP2","type":"practice","finishOrder":["RUS","ANT","VER","LEC","HAM","NOR","GAS","PIA","HAD","OCO","COL","LAW","PER","BOR","HUL","ALB","SAI","LIN","BOT","BEA","STR","ALO"],"defaultOn":["RUS","ANT","VER","LEC"]},"r15":{"round":15,"session":"레이스","type":"race","finishOrder":["RUS","VER","HAD","LEC","ANT","HAM","LIN","OCO","BEA","SAI","HUL","LAW","PIA","PER","BOR","BOT","COL","GAS","NOR","ALB","ALO","STR"],"defaultOn":["RUS","VER","HAD"]},"r15fp3":{"round":15,"session":"FP3","type":"practice","finishOrder":["VER","RUS","HAM","ANT","LEC","GAS","PIA","NOR","HAD","COL","SAI","BEA","BOR","OCO","HUL","PER","ALB","LAW","LIN","ALO","BOT","STR"],"defaultOn":["VER","RUS","HAM","ANT"]}};
