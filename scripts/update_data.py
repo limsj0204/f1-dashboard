@@ -16,7 +16,7 @@ import os
 import re
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 SEASON = 2026
 MIN_ROUND = 12  # first round we have detailed replay data for - never backfill earlier rounds
@@ -176,14 +176,54 @@ def ff1_fetch(year, rnd, session_type, tries=3):
                 is_sc(r.get("TrackStatus")),
                 0 if r.get("FreshTyre") is False else 1,
             ]
-            if session_type == "R":
+            if session_type in ("R", "S"):
                 row.append(int(r["Position"]) if r["Position"] == r["Position"] else None)
             rows.append(row)
         drivers[abbr] = {"team": team, "laps": rows}
 
     if len(drivers) == 0:
         return None
-    return {"year": year, "round": rnd, "raceName": session.event["EventName"], "drivers": drivers}
+    result = {"year": year, "round": rnd, "raceName": session.event["EventName"], "drivers": drivers}
+    if session_type == "SQ":
+        result["quali_rows"] = quali_rows_from_laps(laps)
+    return result
+
+
+def _fmt_quali(sec):
+    m, rest = divmod(sec, 60)
+    return f"{int(m)}:{rest:06.3f}"
+
+
+def quali_rows_from_laps(laps):
+    """Sprint qualifying has no Ergast results, so rebuild the Q1/Q2/Q3
+    classification from the lap times of each knockout segment."""
+    try:
+        segs = laps.split_qualifying_sessions()
+    except Exception as e:
+        print(f"  ! could not split qualifying segments: {e}")
+        return None
+    if len(segs) != 3 or any(x is None for x in segs):
+        return None
+
+    def best(seg):
+        seg = seg[~(seg["Deleted"] == True)]  # noqa: E712 - NaN-safe
+        grp = seg.dropna(subset=["LapTime"]).groupby("Driver")["LapTime"].min()
+        return {d: t.total_seconds() for d, t in grp.items()}
+
+    bests = [best(x) for x in segs]
+    members = [set(x["Driver"].unique()) for x in segs]
+    rows = []
+    placed = set()
+    for i in (2, 1, 0):
+        group = [d for d in members[i] if d not in placed]
+        group.sort(key=lambda d: bests[i].get(d, 9999))
+        for d in group:
+            rows.append([len(rows) + 1, d] + [
+                _fmt_quali(bests[k][d]) if (d in members[k] and d in bests[k]) else ""
+                for k in range(3)
+            ])
+            placed.add(d)
+    return rows
 
 
 # ---------- Ergast ----------
@@ -209,6 +249,16 @@ def ergast_results(rnd):
     if not races:
         return None
     return races[0]["Results"]
+
+
+def ergast_sprint_results(rnd):
+    d = http_get_json(f"{ERGAST_BASE}/{SEASON}/{rnd}/sprint/?limit=30")
+    if not d:
+        return None
+    races = d["MRData"]["RaceTable"]["Races"]
+    if not races:
+        return None
+    return races[0]["SprintResults"]
 
 
 def ergast_driver_standings_current():
@@ -306,15 +356,15 @@ def main():
                 return f"{nxt[field]['date']}T{nxt[field]['time']}"
             next_race_sessions = state["next_race_sessions"]
             next_race_sessions.clear()
-            if "FirstPractice" in nxt:
-                next_race_sessions["1차 연습"] = sess_iso("FirstPractice")
-            if "SecondPractice" in nxt:
-                next_race_sessions["2차 연습"] = sess_iso("SecondPractice")
-            if "ThirdPractice" in nxt:
-                next_race_sessions["3차 연습"] = sess_iso("ThirdPractice")
-            if "Qualifying" in nxt:
-                next_race_sessions["예선"] = sess_iso("Qualifying")
-            next_race_sessions["결승"] = f"{nxt['date']}T{nxt['time']}"
+            labelled = []
+            for field, label in (("FirstPractice", "1차 연습"), ("SecondPractice", "2차 연습"),
+                                 ("SprintQualifying", "스프린트 예선"), ("Sprint", "스프린트"),
+                                 ("ThirdPractice", "3차 연습"), ("Qualifying", "예선")):
+                if field in nxt:
+                    labelled.append((sess_iso(field), label))
+            labelled.append((f"{nxt['date']}T{nxt['time']}", "결승"))
+            for iso, label in sorted(labelled):
+                next_race_sessions[label] = iso
 
     name_map = {
         "RACE_META": "race_meta", "LAP_RACES": "lap_races", "QUALI_RESULTS": "quali_results",
@@ -364,8 +414,8 @@ def process_round(race, rnd, now, state):
         if field not in race:
             continue
         sess_dt = parse_iso(race[field]["date"], race[field]["time"])
-        if sess_dt > now:
-            continue
+        if sess_dt + timedelta(minutes=90) > now:
+            continue  # not finished yet - a partial fetch would be stored forever
         race_key = f"r{rnd}{suffix}"
         if race_key in race_meta:
             continue  # already have it
@@ -387,6 +437,68 @@ def process_round(race, rnd, now, state):
         ensure_gp_name()
         changed = True
         print(f"  OK - {len(finish_order)} drivers")
+
+    # -- sprint qualifying (type "quali": quali table + lap/tyre charts) --
+    if "SprintQualifying" in race:
+        sq_dt = parse_iso(race["SprintQualifying"]["date"], race["SprintQualifying"]["time"])
+        sq_key = f"r{rnd}sq"
+        if sq_dt + timedelta(minutes=120) <= now and sq_key not in race_meta:
+            print(f"Fetching R{rnd} sprint qualifying ...")
+            data = ff1_fetch(2026, rnd, "SQ")
+            rows = data.pop("quali_rows", None) if data else None
+            if data and rows:
+                quali_results[sq_key] = rows
+                lap_races[sq_key] = data
+                finish_order = [r[1] for r in rows]
+                race_meta[sq_key] = {
+                    "round": rnd, "session": "스프린트 예선", "type": "quali",
+                    "finishOrder": finish_order, "defaultOn": finish_order[:4],
+                }
+                ensure_gp_name()
+                changed = True
+                print(f"  OK - sprint pole: {rows[0][1]}")
+            else:
+                print("  (sprint qualifying data not ready yet)")
+
+    # -- sprint race (type "race", reuses sprint-quali table as its grid table) --
+    if "Sprint" in race:
+        sp_dt = parse_iso(race["Sprint"]["date"], race["Sprint"]["time"])
+        sp_key = f"r{rnd}s"
+        if sp_dt + timedelta(minutes=90) <= now and sp_key not in race_meta:
+            print(f"Fetching R{rnd} sprint ...")
+            results = ergast_sprint_results(rnd)
+            data = ff1_fetch(2026, rnd, "S") if results else None
+            if results and data:
+                results_sorted = sorted(results, key=lambda r: int(r["position"]))
+                finish_order = [r["Driver"]["code"] for r in results_sorted]
+                grid_positions[sp_key] = {
+                    r["Driver"]["code"]: int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
+                }
+                lap_races[sp_key] = data
+                race_meta[sp_key] = {
+                    "round": rnd, "session": "스프린트", "type": "race",
+                    "qualiKey": f"r{rnd}sq",
+                    "finishOrder": finish_order, "defaultOn": finish_order[:3],
+                }
+                ds = ergast_driver_standings_current()
+                if ds:
+                    driver_standings[:] = [{
+                        "pos": int(e["position"]), "code": e["Driver"]["code"],
+                        "name": f'{e["Driver"]["givenName"]} {e["Driver"]["familyName"]}',
+                        "team": e["Constructors"][-1]["constructorId"],
+                        "points": int(e["points"]), "wins": int(e["wins"]),
+                    } for e in ds]
+                cs = ergast_constructor_standings_current()
+                if cs:
+                    team_standings[:] = [{
+                        "pos": int(e["position"]), "team": e["Constructor"]["constructorId"],
+                        "points": int(e["points"]), "wins": int(e["wins"]),
+                    } for e in cs]
+                ensure_gp_name()
+                changed = True
+                print(f"  OK - sprint winner: {finish_order[0]}")
+            else:
+                print("  (sprint data not ready yet)")
 
     # -- qualifying --
     quali_dt = parse_iso(race["Qualifying"]["date"], race["Qualifying"]["time"]) if "Qualifying" in race else None
