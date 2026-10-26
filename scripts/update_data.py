@@ -1,7 +1,7 @@
 """
 Auto-updates the pure numeric/structural data in index.html (standings, lap-by-lap
 replay data, qualifying results, grid positions, calendar bookkeeping) from
-Jolpica/Ergast + FastF1, whenever a new session has finished.
+Jolpica/Ergast + OpenF1, whenever a new session has finished.
 
 Deliberately does NOT touch editorial content: NEWS_ITEMS, NEWS_UPDATED_AT, or
 NEXT_RACE_PREVIEW (circuit facts / Pirelli notes / diagram). Those need a web
@@ -22,7 +22,6 @@ SEASON = 2026
 MIN_ROUND = 12  # first round we have detailed replay data for - never backfill earlier rounds
 REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX_PATH = os.path.join(REPO_DIR, "index.html")
-CACHE_DIR = os.path.join(REPO_DIR, ".ff1_cache")
 
 ERGAST_BASE = "https://api.jolpi.ca/ergast/f1"
 UA = "Mozilla/5.0"
@@ -43,6 +42,8 @@ def http_get_json(url, tries=3, timeout=20):
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except Exception as e:
+            if getattr(e, "code", None) == 404:
+                return None  # OpenF1 uses 404 for "no rows" - not worth retrying
             if attempt == tries - 1:
                 print(f"  ! request failed: {url} ({e})")
                 return None
@@ -132,99 +133,155 @@ def parse_iso(date_str, time_str):
     return datetime.fromisoformat(f"{date_str}T{time_str.replace('Z', '+00:00')}")
 
 
-# ---------- FastF1 ----------
-
-def ff1_fetch(year, rnd, session_type, tries=3):
-    import fastf1
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    fastf1.Cache.enable_cache(CACHE_DIR)
-    laps = None
-    for attempt in range(tries):
-        try:
-            session = fastf1.get_session(year, rnd, session_type)
-            session.load(laps=True, telemetry=False, weather=False, messages=False)
-            laps = session.laps
-            break
-        except Exception as e:
-            if attempt == tries - 1:
-                print(f"  ! FastF1 data not ready for R{rnd} {session_type} (after {tries} tries): {e}")
-                return None
-            print(f"  ! FastF1 fetch attempt {attempt+1} failed for R{rnd} {session_type}, retrying: {e}")
-            time.sleep(5)
-    if laps is None or len(laps) == 0:
-        return None
-
-    def is_sc(ts):
-        if ts is None or (isinstance(ts, float)):
-            return 0
-        return 1 if any(c in str(ts) for c in ("4", "6", "7")) else 0
-
-    drivers = {}
-    for abbr, grp in laps.groupby("Driver"):
-        grp = grp.sort_values("LapNumber")
-        team = grp["Team"].iloc[0] if "Team" in grp.columns else None
-        rows = []
-        for _, r in grp.iterrows():
-            lt = r["LapTime"]
-            row = [
-                int(r["LapNumber"]) if r["LapNumber"] == r["LapNumber"] else None,
-                round(lt.total_seconds(), 3) if lt == lt else None,
-                (r["Compound"] or "UNKNOWN")[0] if isinstance(r["Compound"], str) else "U",
-                int(r["Stint"]) if r["Stint"] == r["Stint"] else None,
-                int(r["TyreLife"]) if r["TyreLife"] == r["TyreLife"] else None,
-                1 if r["PitInTime"] == r["PitInTime"] else 0,
-                is_sc(r.get("TrackStatus")),
-                0 if r.get("FreshTyre") is False else 1,
-            ]
-            if session_type in ("R", "S"):
-                row.append(int(r["Position"]) if r["Position"] == r["Position"] else None)
-            rows.append(row)
-        drivers[abbr] = {"team": team, "laps": rows}
-
-    if len(drivers) == 0:
-        return None
-    result = {"year": year, "round": rnd, "raceName": session.event["EventName"], "drivers": drivers}
-    if session_type == "SQ":
-        result["quali_rows"] = quali_rows_from_laps(laps)
-    return result
-
-
 def _fmt_quali(sec):
     m, rest = divmod(sec, 60)
     return f"{int(m)}:{rest:06.3f}"
 
 
-def quali_rows_from_laps(laps):
-    """Sprint qualifying has no Ergast results, so rebuild the Q1/Q2/Q3
-    classification from the lap times of each knockout segment."""
-    try:
-        segs = laps.split_qualifying_sessions()
-    except Exception as e:
-        print(f"  ! could not split qualifying segments: {e}")
+# ---------- OpenF1 (primary lap source) ----------
+# F1 put its timing API behind an F1TV login in Oct 2026, which breaks FastF1
+# for everyone without a paid account. OpenF1 serves the same laps/stints/
+# positions for past sessions with no auth, so it is now the primary source.
+
+OPENF1_BASE = "https://api.openf1.org/v1"
+OPENF1_SESSION_NAMES = {
+    "FP1": "Practice 1", "FP2": "Practice 2", "FP3": "Practice 3",
+    "SQ": "Sprint Qualifying", "S": "Sprint", "Q": "Qualifying", "R": "Race",
+}
+COMPOUND_LETTER = {"SOFT": "S", "MEDIUM": "M", "HARD": "H", "INTERMEDIATE": "I", "WET": "W"}
+
+
+def openf1_get(path, **params):
+    from urllib.parse import urlencode
+    time.sleep(0.4)  # stay under the free-tier rate limit
+    url = f"{OPENF1_BASE}/{path}" + ("?" + urlencode(params) if params else "")
+    d = http_get_json(url, tries=4, timeout=60)
+    return d if isinstance(d, list) else []
+
+
+def openf1_session_key(session_type, expected_dt):
+    name = OPENF1_SESSION_NAMES[session_type]
+    best = None
+    for x in openf1_get("sessions", year=SEASON, session_name=name):
+        dt = datetime.fromisoformat(x["date_start"])
+        gap = abs((dt - expected_dt).total_seconds())
+        if gap < 86400 and (best is None or gap < best[0]):
+            best = (gap, x["session_key"])
+    return best[1] if best else None
+
+
+def _iso(ts):
+    return datetime.fromisoformat(ts)
+
+
+def openf1_fetch(rnd, session_type, expected_dt, race_name):
+    """Per-driver lap rows [lap, time, compound, stint, tyreLife, pitIn, sc, fresh(, position)], plus 'quali_rows' for sprint qualifying."""
+    from bisect import bisect_right
+    key = openf1_session_key(session_type, expected_dt)
+    if key is None:
+        print(f"  ! OpenF1 has no {session_type} session for R{rnd} yet")
         return None
-    if len(segs) != 3 or any(x is None for x in segs):
+    drivers_raw = openf1_get("drivers", session_key=key)
+    laps_raw = openf1_get("laps", session_key=key)
+    if not drivers_raw or not laps_raw:
+        print(f"  ! OpenF1 returned no lap data for R{rnd} {session_type}")
+        return None
+    stints_raw = openf1_get("stints", session_key=key)
+    rc = openf1_get("race_control", session_key=key, category="SafetyCar")
+    positions_raw = openf1_get("position", session_key=key) if session_type in ("R", "S") else []
+
+    who = {d["driver_number"]: (d["name_acronym"], d["team_name"]) for d in drivers_raw}
+
+    # safety car / VSC windows from race-control messages
+    sc_windows, start = [], None
+    for m in sorted(rc, key=lambda m: m["date"]):
+        msg = (m.get("message") or "").upper()
+        if "DEPLOYED" in msg:
+            start = _iso(m["date"])
+        elif start and ("IN THIS LAP" in msg or "ENDING" in msg):
+            sc_windows.append((start, _iso(m["date"])))
+            start = None
+    if start:
+        sc_windows.append((start, datetime.max.replace(tzinfo=timezone.utc)))
+
+    stints_by_drv = {}
+    for st in stints_raw:
+        stints_by_drv.setdefault(st["driver_number"], []).append(st)
+
+    pos_by_drv = {}
+    for pr in positions_raw:
+        pos_by_drv.setdefault(pr["driver_number"], []).append((_iso(pr["date"]), pr["position"]))
+    for v in pos_by_drv.values():
+        v.sort()
+
+    laps_by_drv = {}
+    for l in laps_raw:
+        laps_by_drv.setdefault(l["driver_number"], []).append(l)
+
+    drivers = {}
+    for num, lst in laps_by_drv.items():
+        if num not in who:
+            continue
+        code, team = who[num]
+        lst.sort(key=lambda l: l["lap_number"])
+        pit_out = {l["lap_number"]: bool(l.get("is_pit_out_lap")) for l in lst}
+        times = pos_by_drv.get(num, [])
+        stamps = [t for t, _ in times]
+        rows = []
+        for i, l in enumerate(lst):
+            n = l["lap_number"]
+            dur = l.get("lap_duration")
+            st = next((x for x in stints_by_drv.get(num, []) if x["lap_start"] <= n <= x["lap_end"]), None)
+            comp = COMPOUND_LETTER.get((st or {}).get("compound", ""), "U")
+            age0 = (st or {}).get("tyre_age_at_start")
+            tyre_life = (age0 + (n - st["lap_start"]) + 1) if st and age0 is not None else None
+            lap_start = _iso(l["date_start"]) if l.get("date_start") else None
+            lap_end = lap_start + timedelta(seconds=dur) if (lap_start and dur) else None
+            in_sc = 0
+            if lap_start and lap_end:
+                in_sc = 1 if any(a < lap_end and b > lap_start for a, b in sc_windows) else 0
+            row = [
+                n,
+                round(dur, 3) if dur else None,
+                comp,
+                st["stint_number"] if st else None,
+                tyre_life,
+                1 if pit_out.get(n + 1) else 0,
+                in_sc,
+                0 if (age0 or 0) > 0 else 1,
+            ]
+            if session_type in ("R", "S"):
+                pos = None
+                if lap_end and stamps:
+                    j = bisect_right(stamps, lap_end) - 1
+                    if j >= 0:
+                        pos = times[j][1]
+                row.append(pos)
+            rows.append(row)
+        drivers[code] = {"team": team, "laps": rows}
+    if not drivers:
         return None
 
-    def best(seg):
-        seg = seg[~(seg["Deleted"] == True)]  # noqa: E712 - NaN-safe
-        grp = seg.dropna(subset=["LapTime"]).groupby("Driver")["LapTime"].min()
-        return {d: t.total_seconds() for d, t in grp.items()}
+    result = {"year": SEASON, "round": rnd, "raceName": race_name, "drivers": drivers}
+    if session_type == "SQ":
+        sr = openf1_get("session_result", session_key=key)
+        if sr:
+            rows = []
+            def _pos(r):
+                return r["position"] if isinstance(r["position"], int) else 99
+            for idx, r in enumerate(sorted(sr, key=_pos), start=1):
+                if r["driver_number"] not in who:
+                    continue
+                durs = r.get("duration") or []
+                durs = (list(durs) + [None] * 3)[:3] if isinstance(durs, list) else [None] * 3
+                rows.append([idx, who[r["driver_number"]][0]] +
+                            [_fmt_quali(x) if x else "" for x in durs])
+            result["quali_rows"] = rows or None
+    return result
 
-    bests = [best(x) for x in segs]
-    members = [set(x["Driver"].unique()) for x in segs]
-    rows = []
-    placed = set()
-    for i in (2, 1, 0):
-        group = [d for d in members[i] if d not in placed]
-        group.sort(key=lambda d: bests[i].get(d, 9999))
-        for d in group:
-            rows.append([len(rows) + 1, d] + [
-                _fmt_quali(bests[k][d]) if (d in members[k] and d in bests[k]) else ""
-                for k in range(3)
-            ])
-            placed.add(d)
-    return rows
 
+def fetch_laps(rnd, session_type, expected_dt, race_name):
+    return openf1_fetch(rnd, session_type, expected_dt, race_name)
 
 # ---------- Ergast ----------
 
@@ -420,7 +477,7 @@ def process_round(race, rnd, now, state):
         if race_key in race_meta:
             continue  # already have it
         print(f"Fetching R{rnd} {label} ...")
-        data = ff1_fetch(2026, rnd, label)
+        data = fetch_laps(rnd, label, sess_dt, race["raceName"])
         if not data:
             print(f"  (no data yet for R{rnd} {label}, will retry later)")
             continue
@@ -444,7 +501,7 @@ def process_round(race, rnd, now, state):
         sq_key = f"r{rnd}sq"
         if sq_dt + timedelta(minutes=120) <= now and sq_key not in race_meta:
             print(f"Fetching R{rnd} sprint qualifying ...")
-            data = ff1_fetch(2026, rnd, "SQ")
+            data = fetch_laps(rnd, "SQ", sq_dt, race["raceName"])
             rows = data.pop("quali_rows", None) if data else None
             if data and rows:
                 quali_results[sq_key] = rows
@@ -467,7 +524,7 @@ def process_round(race, rnd, now, state):
         if sp_dt + timedelta(minutes=90) <= now and sp_key not in race_meta:
             print(f"Fetching R{rnd} sprint ...")
             results = ergast_sprint_results(rnd)
-            data = ff1_fetch(2026, rnd, "S") if results else None
+            data = fetch_laps(rnd, "S", sp_dt, race["raceName"]) if results else None
             if results and data:
                 results_sorted = sorted(results, key=lambda r: int(r["position"]))
                 finish_order = [r["Driver"]["code"] for r in results_sorted]
@@ -532,7 +589,7 @@ def process_round(race, rnd, now, state):
             grid_positions[race_key] = {
                 r["Driver"]["code"]: int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
             }
-            # keep qualiOnly=True until the FastF1 lap-data block below actually
+            # keep qualiOnly=True until the OpenF1 lap-data block below actually
             # lands real per-lap data - promoting this too early crashes the
             # replay UI, which indexes LAP_RACES[key].drivers unconditionally
             # once qualiOnly is gone (see renderDriverChips and friends).
@@ -603,10 +660,10 @@ def process_round(race, rnd, now, state):
         else:
             print("  (race results not published yet)")
 
-    # -- replace race-lap placeholder with real FastF1 data once available --
+    # -- replace race-lap placeholder with real OpenF1 lap data once available --
     if race_key in lap_races and not lap_races[race_key]["drivers"]:
         print(f"Fetching R{rnd} race lap data ...")
-        data = ff1_fetch(2026, rnd, "R")
+        data = fetch_laps(rnd, "R", race_dt, race["raceName"])
         if data:
             lap_races[race_key] = data
             if race_key in race_meta:

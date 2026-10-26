@@ -1,1 +1,1 @@
-fastf1
+# no third-party dependencies (lap data comes from OpenF1, results from Jolpica)
