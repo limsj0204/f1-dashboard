@@ -582,21 +582,35 @@ const completedRaces = [[1,"Australian GP","Melbourne","Australia","2026-03-08",
 // 라운드별 드라이버 누적 포인트 (Ergast/Jolpica driverstandings, 라운드마다 스냅샷)
 const POINTS_PROGRESS = {"rounds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"points":{"RUS":[25,51,63,80,88,88,106,131,154,154,160,183,201,211,236,236,238,242,250],"ANT":[18,47,72,100,131,156,156,171,179,204,219,242,267,292,302,320,340,365,380],"LEC":[15,34,49,59,75,75,75,79,108,126,138,155,155,167,179,191,215,233,245],"HAM":[12,33,41,51,72,90,115,125,147,159,169,183,191,191,199,214,229,241,259],"NOR":[10,15,25,51,58,58,73,79,97,103,128,159,171,186,186,188,201,211,221],"VER":[8,8,12,26,43,43,55,73,76,91,109,112,127,145,163,188,221,236,261],"BEA":[6,17,17,17,18,18,18,18,18,18,18,18,18,18,20,20,23,23,23],"LIN":[4,4,4,4,5,13,15,16,22,24,25,25,29,31,37,38,38,38,38],"BOR":[2,2,2,2,2,2,2,2,6,10,10,10,10,10,10,10,10,10,10],"GAS":[1,9,15,16,20,26,32,32,33,33,33,35,41,41,41,41,41,42,43],"OCO":[0,0,1,1,1,3,3,3,3,3,3,3,3,3,7,7,7,7,7],"ALB":[0,0,0,1,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"LAW":[0,8,10,10,16,26,30,32,41,41,45,51,51,59,59,65,75,77,79],"COL":[0,1,1,7,15,15,16,16,18,19,19,19,21,27,27,27,27,27,31],"SAI":[0,2,2,4,6,6,6,6,6,6,6,6,6,6,7,7,7,7,7],"PER":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"HAD":[0,4,4,4,14,29,37,45,55,63,71,71,71,71,86,96,97,105,105],"PIA":[0,3,21,43,48,60,70,82,84,94,94,106,116,120,120,128,138,144,150],"HUL":[0,0,0,0,0,0,0,0,0,0,2,6,6,7,7,7,13,13,13],"ALO":[0,0,0,0,0,1,1,1,1,1,1,3,3,3,3,7,7,7,7],"BOT":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"STR":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"TSU":[0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1]}};
 
-const NEWS_UPDATED_AT = "2026-10-27";
+const NEWS_UPDATED_AT = "2026-11-03";
 const NEWS_ITEMS = [
   {
     round: 19,
     tag: "챔피언십",
-    title: "안토넬리, 멕시코에서 우승 확정 유력 - 8위 안이면 누가 이겨도 확정",
-    body: "오스틴 우승으로 안토넬리는 365점이 됐고, 2위 러셀(242점)과 123점 차다. 남은 5경기(스프린트는 모두 끝났다)의 최대 포인트는 125점이어서, 멕시코에서 안토넬리가 8위 안에만 들어오면 러셀이 우승해도 챔피언이 확정된다. 확정이 안 되는 경우는 러셀 우승에 안토넬리 9위 이하, 또는 해밀턴 우승에 안토넬리 10위 밖처럼 매우 좁다.",
-    source: "자체 계산 · ESPN", url: "https://www.espn.com/f1/story/_/id/50259831/united-states-grand-prix-austin-2026-live-updates-results-analysis-commentary"
+    title: "안토넬리, 멕시코시티에서 최연소 월드 챔피언 확정 - 이탈리아 선수로는 1953년 이후 처음",
+    body: "안토넬리는 4번 그리드에서 출발해 3위로 들어오며 시즌 4경기를 남기고 드라이버 챔피언을 확정했다. 9위만 해도 러셀과 해밀턴의 결과와 상관없이 확정되는 상황이었다. 380점으로 2위 베르스타펜(261점)과 119점 차이고, 남은 4경기의 최대 포인트는 100점이다. 이탈리아 선수의 챔피언은 1953년 알베르토 아스카리 이후 73년 만이다.",
+    source: "Formula1.com · ESPN", url: "https://www.formula1.com/en/latest/article/antonelli-crowned-youngest-ever-f1-champion-as-verstappen-wins-eventful-mexico-city-grand-prix.xpMMeef0KmRURs9IDs3LH"
   },
   {
     round: 19,
     tag: "그랑프리 리뷰",
-    title: "오스틴: 안토넬리 시즌 9승째 - 베르스타펜은 출발 부진, 해밀턴은 러셀에 1점 차",
-    body: "안토넬리는 좋은 출발과 원스톱 전략으로 레이스를 지배했고, 베르스타펜의 출발 부진을 틈타 선두를 지켰다. 2위는 르클레르, 3위는 베르스타펜이었고 해밀턴이 4위, 노리스가 5위였다. 이 결과로 드라이버 순위 2위 러셀(242점)과 3위 해밀턴(241점)은 단 1점 차가 됐다.",
-    source: "PlanetF1 · Formula1.com", url: "https://www.formula1.com/en/latest/article/antonelli-surges-to-dominant-victory-in-united-states-grand-prix-ahead-of-leclerc-and-verstappen.6kmBQv9FNTW7LzkDj8S34j"
+    title: "멕시코시티: 베르스타펜 시즌 3승째 - 페라리 내부 접촉이 승부를 갈랐다",
+    body: "폴 포지션 해밀턴을 르클레르가 1코너에서 추격하다 4코너에서 둘이 나란히 밀려났고, 그 틈에 5번 그리드의 베르스타펜이 앞으로 나섰다. 르클레르는 이 접촉으로 5초 페널티를 받았고, 베르스타펜은 그가 페널티를 소화하는 피트스톱에서 앞지른 뒤 늦은 재출발에서 해밀턴의 추격을 0.799초 차로 막았다. 보타스의 서스펜션 고장 충돌로 적기가 나왔고, 린드블라드와 피아스트리의 충돌로 세이프티카가 또 나왔다. 러셀은 하디아와의 접촉으로 10초 페널티를 받아 6위에 그쳤다. 하스의 히라카와는 데뷔전에서 10위로 첫 포인트를 올렸다.",
+    source: "Formula1.com · Motorsport.com", url: "https://www.formula1.com/en/latest/article/mexico-city-lowdown-all-the-key-moments-as-antonelli-secures-maiden-title-and-verstappen-denies-ferrari-victory.3mPqECWFPlJsdg4jUOZUXz"
+  },
+  {
+    round: 20,
+    tag: "컨스트럭터",
+    title: "컨스트럭터 타이틀은 아직 - 브라질에서 4점만 더 벌리면 메르세데스 확정",
+    body: "멕시코 이후 메르세데스는 630점으로 2위 페라리(504점)에 126점 앞서 있다. 남은 4경기에서 한 팀이 가져갈 수 있는 최대 포인트는 1-2위 43점씩 172점이라 아직 확정은 아니다. 브라질에서 격차를 4점 이상 벌리면 남은 3경기의 최대치(129점)를 넘겨 확정된다.",
+    source: "자체 계산", url: "https://www.formula1.com/en/latest/article/mexico-city-lowdown-all-the-key-moments-as-antonelli-secures-maiden-title-and-verstappen-denies-ferrari-victory.3mPqECWFPlJsdg4jUOZUXz"
+  },
+  {
+    round: 20,
+    tag: "프리뷰",
+    title: "상파울루 GP: 타이어가 작년보다 한 단계 소프트 - 금요일 비 예보",
+    body: "피렐리는 멕시코시티와 같은 C3(하드)-C4(미디엄)-C5(소프트)를 가져왔다. 작년 C2-C3-C4보다 모두 한 단계 소프트하다. 작년에는 미디엄이 전체 랩의 73.5%를 달렸고 피트스톱이 37번 나와 대부분 2스톱이었는데, 올해는 세 컴파운드를 다 쓰는 전략도 나올 수 있다는 전망이다. 날씨는 금요일 강수 확률 60%, 토요일 30%, 일요일 40%로 예보됐다(바뀔 수 있음).",
+    source: "Coffee Corner Motorsport · Scuderia Fans", url: "https://coffeecornermotorsport.com/brazil-grand-prix-2026-preview/"
   },
   {
     tag: "드라이버 마켓",
@@ -620,16 +634,16 @@ const NEWS_ITEMS = [
 
 // 다음 그랑프리 프리뷰: 매 라운드 끝나고 다음 라운드 기준으로 다시 조사해서 갱신
 const NEXT_RACE_PREVIEW = {
-  round: 19,
-  circuitName: "Autódromo Hermanos Rodríguez",
-  diagram: { src: "assets/circuits/mexico.svg", creditText: "Pitlane02, CC BY-SA 3.0", creditUrl: "https://commons.wikimedia.org/wiki/File:Aut%C3%B3dromo_Hermanos_Rodr%C3%ADguez_2015.svg" },
+  round: 20,
+  circuitName: "Autódromo José Carlos Pace (Interlagos)",
+  diagram: { src: "assets/circuits/interlagos.svg", creditText: "Will Pittenger, CC BY-SA 3.0", creditUrl: "https://commons.wikimedia.org/wiki/File:Aut%C3%B3dromo_Jos%C3%A9_Carlos_Pace_(AKA_Interlagos)_track_map.svg" },
   facts: [
-    { k: "랩 길이", v: "4.304", unit: "km" },
+    { k: "랩 길이", v: "4.309", unit: "km" },
     { k: "레이스 랩수", v: "71", unit: "랩" },
-    { k: "총 거리", v: "305.6", unit: "km" },
-    { k: "랩 레코드", v: "1:17.774", unit: "Bottas · 2021" },
-    { k: "해발 고도", v: "2,238", unit: "m" },
-    { k: "코너 수", v: "17", unit: "개" }
+    { k: "총 거리", v: "305.9", unit: "km" },
+    { k: "랩 레코드", v: "1:10.540", unit: "Bottas · 2018" },
+    { k: "주행 방향", v: "반시계", unit: "" },
+    { k: "코너 수", v: "15", unit: "개" }
   ],
   tyres: [
     { compound: "C5", label: "소프트", key: "soft" },
@@ -637,9 +651,9 @@ const NEXT_RACE_PREVIEW = {
     { compound: "C3", label: "하드", key: "hard" }
   ],
   strategyNotes: [
-    "피렐리는 C3-C4-C5의 연속 조합을 가져왔다. 작년에는 C3를 건너뛴 C2-C4-C5 조합이었는데, 올해는 컴파운드 간격이 없는 한 단계 소프트한 선택이다.",
-    "해발 2,200m가 넘는 고지대라 공기가 희박해 다운포스가 줄고, 타이어가 미끄러지면서 그레이닝이 생기기 쉽다. 노면에 깔린 고무가 적은 것도 같은 방향으로 작용한다.",
-    "소프트 쪽이 주력이 되면서 거의 전 레이스를 부드러운 컴파운드로 달리는 전략이 가능하지만, 마모가 심하면 한 번 더 들어가야 하는 위험이 있다. 피렐리는 올해 C4·C5의 그레이닝 저항이 이전보다 개선됐다고 설명한다."
+    "피렐리는 멕시코시티와 같은 C3-C4-C5 조합을 가져왔다. 작년 상파울루의 C2-C3-C4보다 모든 컴파운드가 한 단계 소프트하다.",
+    "작년에는 미디엄이 전체 랩의 73.5%를 달렸고 피트스톱이 37번 나와 대부분 2스톱이었다. 하드는 거의 쓰이지 않았다. 올해는 컴파운드가 부드러워져 한 레이스에 세 종류를 다 쓰는 팀도 나올 수 있다는 전망이다.",
+    "올해 규정에는 DRS가 없어서 추월은 오버테이크 모드와 액티브 에어로로 이뤄진다. 비 예보(금 60%, 토 30%, 일 40%)가 있어 날씨에 따라 전략이 크게 갈릴 수 있다."
   ]
 };
 
