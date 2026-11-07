@@ -297,6 +297,14 @@
   .circuit-facts .fact .v{ font:600 14.5px "IBM Plex Mono",monospace; margin-top:3px; }
   .circuit-facts .fact .v small{ font-family:"IBM Plex Sans",sans-serif; font-weight:400; color:var(--text-secondary); font-size:11.5px; }
 
+  .char-list{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:8px 24px; margin-top:4px; }
+  .char-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .char-row .pips{ display:flex; gap:3px; flex:none; }
+  .char-row .pip{ width:18px; height:8px; border-radius:2px; background:var(--surface-sunk); border:1px solid var(--border); }
+  .char-row .pip.on{ background:var(--accent); border-color:var(--accent); }
+  .char-row .num{ font:600 12px "IBM Plex Mono",monospace; color:var(--text-secondary); width:12px; text-align:right; }
+  .char-src{ margin-top:10px; font-size:11px; color:var(--text-muted); }
+
   .circuit-diagram{
     background:#FAFAF9; border:1px solid var(--border); border-radius:12px;
     padding:16px; text-align:center;
@@ -404,6 +412,13 @@
     <section class="card">
       <h2>서킷 레이아웃</h2>
       <div class="circuit-diagram" id="ngDiagram"></div>
+    </section>
+
+    <section class="card" id="ngCharCard">
+      <h2>서킷 성향</h2>
+      <div class="cnt">피렐리가 매긴 5단계 평가 (높을수록 타이어에 부담이 크거나 변화가 큼)</div>
+      <div class="char-list" id="ngChars"></div>
+      <div class="char-src" id="ngCharSrc"></div>
     </section>
 
     <section class="card">
@@ -643,8 +658,19 @@ const NEXT_RACE_PREVIEW = {
     { k: "총 거리", v: "305.9", unit: "km" },
     { k: "랩 레코드", v: "1:10.540", unit: "Bottas · 2018" },
     { k: "주행 방향", v: "반시계", unit: "" },
-    { k: "코너 수", v: "15", unit: "개" }
+    { k: "코너 수", v: "15", unit: "개" },
+    { k: "평균 피트 손실", v: "22.5", unit: "초" }
   ],
+  characteristics: [
+    { k: "트랙션", v: 3 },
+    { k: "브레이킹", v: 3 },
+    { k: "횡방향 하중", v: 3 },
+    { k: "노면 마모성", v: 3 },
+    { k: "노면 그립", v: 3 },
+    { k: "타이어 스트레스", v: 3 },
+    { k: "트랙 에볼루션", v: 5 }
+  ],
+  characteristicsSrc: { text: "Pirelli 상파울루 GP 프리뷰", url: "https://press.pirelli.com/pirelli-brings-the-softer-trio-back-to-interlagos/" },
   tyres: [
     { compound: "C5", label: "소프트", key: "soft" },
     { compound: "C4", label: "미디엄", key: "medium" },
@@ -653,6 +679,7 @@ const NEXT_RACE_PREVIEW = {
   strategyNotes: [
     "피렐리는 멕시코시티와 같은 C3-C4-C5 조합을 가져왔다. 작년 상파울루의 C2-C3-C4보다 모든 컴파운드가 한 단계 소프트하다.",
     "작년에는 미디엄이 전체 랩의 73.5%를 달렸고 피트스톱이 37번 나와 대부분 2스톱이었다. 하드는 거의 쓰이지 않았다. 올해는 컴파운드가 부드러워져 한 레이스에 세 종류를 다 쓰는 팀도 나올 수 있다는 전망이다.",
+    "피렐리 평가는 트랙 에볼루션만 5점 만점이고 나머지는 모두 중간(3)이다. 3~5코너와 8~9코너 구간이 새로 포장돼 주말 동안 그립이 크게 달라질 수 있어서, FP1부터 예선까지 코스 상태가 빠르게 바뀔 가능성이 크다.",
     "올해 규정에는 DRS가 없어서 추월은 오버테이크 모드와 액티브 에어로로 이뤄진다. 비 예보(금 60%, 토 30%, 일 40%)가 있어 날씨에 따라 전략이 크게 갈릴 수 있다."
   ]
 };
@@ -709,6 +736,19 @@ function renderNextGpTab(){
   document.getElementById("ngFacts").innerHTML = p.facts.map(f=>
     '<div class="fact"><div class="k">'+f.k+'</div><div class="v">'+f.v+' <small>'+f.unit+'</small></div></div>'
   ).join("");
+
+  const charCard = document.getElementById("ngCharCard");
+  if(p.characteristics){
+    document.getElementById("ngChars").innerHTML = p.characteristics.map(c=>{
+      let pips = "";
+      for(let i=1;i<=5;i++) pips += '<span class="pip'+(i<=c.v?' on':'')+'"></span>';
+      return '<div class="char-row"><span>'+c.k+'</span><span style="display:flex;align-items:center;gap:8px;"><span class="pips">'+pips+'</span><span class="num">'+c.v+'</span></span></div>';
+    }).join("");
+    document.getElementById("ngCharSrc").innerHTML = '출처: <a href="'+p.characteristicsSrc.url+'" target="_blank" rel="noopener">'+p.characteristicsSrc.text+'</a>';
+    charCard.hidden = false;
+  } else {
+    charCard.hidden = true;
+  }
 
   document.getElementById("ngDiagram").innerHTML =
     '<img src="'+p.diagram.src+'" alt="'+p.circuitName+' 서킷 레이아웃" loading="lazy">'+
