@@ -35,6 +35,15 @@ SESSION_FIELD_MAP = [
 
 # ---------- HTTP ----------
 
+def dcode(driver):
+    """Three-letter code; Jolpica omits it for some new drivers, so fall back to the surname."""
+    if driver.get("code"):
+        return driver["code"]
+    import unicodedata
+    fam = unicodedata.normalize("NFKD", driver["familyName"]).encode("ascii", "ignore").decode()
+    return fam[:3].upper()
+
+
 def http_get_json(url, tries=3, timeout=20):
     for attempt in range(tries):
         try:
@@ -280,6 +289,28 @@ def openf1_fetch(rnd, session_type, expected_dt, race_name):
     return result
 
 
+def openf1_quali_rows(session_type, expected_dt):
+    """Classification with Q1/Q2/Q3 times from OpenF1; used when Jolpica has positions but no times."""
+    key = openf1_session_key(session_type, expected_dt)
+    if not key:
+        return None
+    sr = openf1_get("session_result", session_key=key)
+    drivers_raw = openf1_get("drivers", session_key=key)
+    if not sr or not drivers_raw:
+        return None
+    code = {d["driver_number"]: d["name_acronym"] for d in drivers_raw}
+    rows = []
+    def _pos(r):
+        return r["position"] if isinstance(r["position"], int) else 99
+    for idx, r in enumerate(sorted(sr, key=_pos), start=1):
+        if r["driver_number"] not in code:
+            continue
+        durs = r.get("duration") or []
+        durs = (list(durs) + [None] * 3)[:3] if isinstance(durs, list) else [None] * 3
+        rows.append([idx, code[r["driver_number"]]] + [_fmt_quali(x) if x else "" for x in durs])
+    return rows or None
+
+
 def fetch_laps(rnd, session_type, expected_dt, race_name):
     return openf1_fetch(rnd, session_type, expected_dt, race_name)
 
@@ -294,7 +325,7 @@ def ergast_qualifying(rnd):
         return None
     rows = []
     for r in races[0]["QualifyingResults"]:
-        rows.append([int(r["position"]), r["Driver"]["code"], r.get("Q1", ""), r.get("Q2", ""), r.get("Q3", "")])
+        rows.append([int(r["position"]), dcode(r["Driver"]), r.get("Q1", ""), r.get("Q2", ""), r.get("Q3", "")])
     return rows
 
 
@@ -345,7 +376,7 @@ def ergast_driver_standings_after_round(rnd):
     lst = d["MRData"]["StandingsTable"]["StandingsLists"]
     if not lst:
         return None
-    return {e["Driver"]["code"]: int(e["points"]) for e in lst[0]["DriverStandings"]}
+    return {dcode(e["Driver"]): int(e["points"]) for e in lst[0]["DriverStandings"]}
 
 
 def ergast_schedule():
@@ -527,9 +558,9 @@ def process_round(race, rnd, now, state):
             data = fetch_laps(rnd, "S", sp_dt, race["raceName"]) if results else None
             if results and data:
                 results_sorted = sorted(results, key=lambda r: int(r["position"]))
-                finish_order = [r["Driver"]["code"] for r in results_sorted]
+                finish_order = [dcode(r["Driver"]) for r in results_sorted]
                 grid_positions[sp_key] = {
-                    r["Driver"]["code"]: int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
+                    dcode(r["Driver"]): int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
                 }
                 lap_races[sp_key] = data
                 race_meta[sp_key] = {
@@ -540,7 +571,7 @@ def process_round(race, rnd, now, state):
                 ds = ergast_driver_standings_current()
                 if ds:
                     driver_standings[:] = [{
-                        "pos": int(e["position"]), "code": e["Driver"]["code"],
+                        "pos": int(e["position"]), "code": dcode(e["Driver"]),
                         "name": f'{e["Driver"]["givenName"]} {e["Driver"]["familyName"]}',
                         "team": e["Constructors"][-1]["constructorId"],
                         "points": int(e["points"]), "wins": int(e["wins"]),
@@ -564,6 +595,8 @@ def process_round(race, rnd, now, state):
     if quali_dt and quali_dt <= now and race_key not in race_meta:
         print(f"Fetching R{rnd} qualifying ...")
         rows = ergast_qualifying(rnd)
+        if rows and not any(r[2] for r in rows):
+            rows = openf1_quali_rows("Q", quali_dt) or rows
         if rows:
             quali_results[race_key] = rows
             finish_order = [r[1] for r in rows]
@@ -585,9 +618,9 @@ def process_round(race, rnd, now, state):
         results = ergast_results(rnd)
         if results:
             results_sorted = sorted(results, key=lambda r: int(r["position"]))
-            finish_order = [r["Driver"]["code"] for r in results_sorted]
+            finish_order = [dcode(r["Driver"]) for r in results_sorted]
             grid_positions[race_key] = {
-                r["Driver"]["code"]: int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
+                dcode(r["Driver"]): int(r["grid"]) for r in results if r.get("grid") not in (None, "0")
             }
             # keep qualiOnly=True until the OpenF1 lap-data block below actually
             # lands real per-lap data - promoting this too early crashes the
@@ -604,7 +637,7 @@ def process_round(race, rnd, now, state):
                 time_field = (r.get("Time") or {}).get("time")
                 gap = "우승" if r["position"] == "1" else (time_field or "–")
                 new_last_result.append({
-                    "pos": int(r["position"]), "code": r["Driver"]["code"],
+                    "pos": int(r["position"]), "code": dcode(r["Driver"]),
                     "name": f'{r["Driver"]["givenName"]} {r["Driver"]["familyName"]}',
                     "team": r["Constructor"]["constructorId"], "timeOrGap": gap,
                 })
@@ -615,18 +648,18 @@ def process_round(race, rnd, now, state):
                 fl = fl_candidates[0]
                 last_race_fastest_lap.clear()
                 last_race_fastest_lap.update({
-                    "code": fl["Driver"]["code"], "name": f'{fl["Driver"]["givenName"]} {fl["Driver"]["familyName"]}',
+                    "code": dcode(fl["Driver"]), "name": f'{fl["Driver"]["givenName"]} {fl["Driver"]["familyName"]}',
                     "time": fl["FastestLap"]["Time"]["time"], "lap": int(fl["FastestLap"]["lap"]),
                 })
 
             winner = results_sorted[0]
             pole_code = quali_results.get(race_key, [[None, finish_order[0]]])[0][1]
-            pole_row = next((r for r in results if r["Driver"]["code"] == pole_code), winner)
+            pole_row = next((r for r in results if dcode(r["Driver"]) == pole_code), winner)
             completed_races[:] = [cr for cr in completed_races if cr[0] != rnd]
             completed_races.append([
                 rnd, short_gp_name(race["raceName"]), race["Circuit"]["Location"]["locality"],
                 race["Circuit"]["Location"]["country"], race["date"],
-                winner["Driver"]["code"], f'{winner["Driver"]["givenName"]} {winner["Driver"]["familyName"]}',
+                dcode(winner["Driver"]), f'{winner["Driver"]["givenName"]} {winner["Driver"]["familyName"]}',
                 winner["Constructor"]["constructorId"], pole_code,
                 f'{pole_row["Driver"]["givenName"]} {pole_row["Driver"]["familyName"]}',
             ])
@@ -637,7 +670,7 @@ def process_round(race, rnd, now, state):
             ds = ergast_driver_standings_current()
             if ds:
                 driver_standings[:] = [{
-                    "pos": int(e["position"]), "code": e["Driver"]["code"],
+                    "pos": int(e["position"]), "code": dcode(e["Driver"]),
                     "name": f'{e["Driver"]["givenName"]} {e["Driver"]["familyName"]}',
                     "team": e["Constructors"][-1]["constructorId"],
                     "points": int(e["points"]), "wins": int(e["wins"]),
