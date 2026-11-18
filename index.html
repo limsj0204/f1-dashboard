@@ -414,6 +414,13 @@
       <div class="circuit-diagram" id="ngDiagram"></div>
     </section>
 
+    <section class="card" id="ngWeatherCard">
+      <h2>예상 날씨</h2>
+      <div class="cnt" id="ngWeatherAsOf"></div>
+      <div class="char-list" id="ngWeather" style="grid-template-columns:1fr;"></div>
+      <div class="char-src" id="ngWeatherNote"></div>
+    </section>
+
     <section class="card" id="ngCharCard">
       <h2>서킷 성향</h2>
       <div class="cnt">피렐리가 매긴 5단계 평가 (높을수록 타이어에 부담이 크거나 변화가 큼)</div>
@@ -597,46 +604,40 @@ const completedRaces = [[1,"Australian GP","Melbourne","Australia","2026-03-08",
 // 라운드별 드라이버 누적 포인트 (Ergast/Jolpica driverstandings, 라운드마다 스냅샷)
 const POINTS_PROGRESS = {"rounds":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],"points":{"RUS":[25,51,63,80,88,88,106,131,154,154,160,183,201,211,236,236,238,242,250,262],"ANT":[18,47,72,100,131,156,156,171,179,204,219,242,267,292,302,320,340,365,380,390],"LEC":[15,34,49,59,75,75,75,79,108,126,138,155,155,167,179,191,215,233,245,251],"HAM":[12,33,41,51,72,90,115,125,147,159,169,183,191,191,199,214,229,241,259,261],"NOR":[10,15,25,51,58,58,73,79,97,103,128,159,171,186,186,188,201,211,221,246],"VER":[8,8,12,26,43,43,55,73,76,91,109,112,127,145,163,188,221,236,261,279],"BEA":[6,17,17,17,18,18,18,18,18,18,18,18,18,18,20,20,23,23,23,23],"LIN":[4,4,4,4,5,13,15,16,22,24,25,25,29,31,37,38,38,38,38,38],"BOR":[2,2,2,2,2,2,2,2,6,10,10,10,10,10,10,10,10,10,10,14],"GAS":[1,9,15,16,20,26,32,32,33,33,33,35,41,41,41,41,41,42,43,42],"OCO":[0,0,1,1,1,3,3,3,3,3,3,3,3,3,7,7,7,7,7,7],"ALB":[0,0,0,1,1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"LAW":[0,8,10,10,16,26,30,32,41,41,45,51,51,59,59,65,75,77,79,87],"COL":[0,1,1,7,15,15,16,16,18,19,19,19,21,27,27,27,27,27,31,27],"SAI":[0,2,2,4,6,6,6,6,6,6,6,6,6,6,7,7,7,7,7,7],"PER":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"HAD":[0,4,4,4,14,29,37,45,55,63,71,71,71,71,86,96,97,105,105,122],"PIA":[0,3,21,43,48,60,70,82,84,94,94,106,116,120,120,128,138,144,150,152],"HUL":[0,0,0,0,0,0,0,0,0,0,2,6,6,7,7,7,13,13,13,14],"ALO":[0,0,0,0,0,1,1,1,1,1,1,3,3,3,3,7,7,7,7,7],"BOT":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"STR":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"TSU":[0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1]}};
 
-const NEWS_UPDATED_AT = "2026-11-09";
+const NEWS_UPDATED_AT = "2026-11-19";
 const NEWS_ITEMS = [
+  {
+    round: 21,
+    tag: "프리뷰",
+    title: "라스베이거스 GP: 피렐리 평가는 트랙 에볼루션만 만점 - 낮은 그립과 저온이 관건",
+    body: "타이어는 작년과 같은 C3-C4-C5다. 기온은 10~15도로 낮고, 도로가 매일 일반 차량에 개방돼 먼지와 모래가 쌓이기 때문에 그립이 처음엔 낮고 변화를 예측하기 어렵다. 긴 풀스로틀 구간 탓에 타이어가 식기 쉬워서 워밍업이 예선의 핵심이고, 저온 그레이닝도 다시 나올 수 있다. 이론상 가장 빠른 전략은 1스톱이고, 피트 뒤 타이어가 빨리 식어 언더컷 효과는 작다고 피렐리는 본다.",
+    source: "Pirelli", url: "https://press.pirelli.com/the-night-time-challenge-of-las-vegas/"
+  },
+  {
+    round: 21,
+    tag: "챔피언십",
+    title: "남은 3경기, 2위부터 6위까지 33점 안에 몰려 있다",
+    body: "안토넬리가 챔피언을 확정한 뒤에도 순위 싸움은 남아 있다. 2위 베르스타펜을 포함해 러셀, 해밀턴, 르클레르, 노리스까지 다섯 명이 33점 안에 있다. 컨스트럭터는 페라리가 2위를 지킬 가능성이 크고, 3위는 레드불이 맥라렌을 17점 앞서 있다.",
+    source: "Formula1.com", url: "https://www.formula1.com/en/latest/article/its-race-week-5-storylines-were-excited-about-ahead-of-the-2026-las-vegas-grand-prix.3fjavheTbHD8fjZI0i7BWd"
+  },
+  {
+    tag: "드라이버 마켓",
+    title: "캐딜락 2번째 시트는 보타스 유임 유력 - 발표는 라스베이거스 주간 예상",
+    body: "페레스는 장기 연장 계약을 맺었고, 나머지 한 자리는 보타스가 유임되고 리저브 허타(미국 선수)는 밀리는 쪽으로 결정된 것으로 알려졌다. 다만 11월 12일 분석 기사에서는 보타스의 옵션이 아직 확정되지 않았다고 했고, 공식 발표는 없다. 하스는 2027년 레이스 드라이버로 카마라를 확정했고, 오콘은 올해를 하스에서 끝내지 않으며 2027년 시트는 없다.",
+    source: "Formula1.com", url: "https://www.formula1.com/en/latest/article/analysis-why-the-f1-driver-market-might-produce-one-last-twist-for-2027.6t7AwtqfHWkDqSgQZ3ElQ3"
+  },
+  {
+    tag: "드라이버 마켓",
+    title: "레이싱 불스는 2027년 로슨-린드블라드 유지 - 츠올로프 승격은 보류",
+    body: "로슨은 8~9월 하자르 대신 레드불에서 3경기를 뛰었고 5경기에서 4번 7위 안에 들었다. 린드블라드는 루키 시즌 성과로 2년째 시트를 얻었다. 레이싱 불스는 니콜라 츠올로프 승격도 검토했던 것으로 알려졌다.",
+    source: "Formula1.com", url: "https://www.formula1.com/en/latest/article/its-race-week-5-storylines-were-excited-about-ahead-of-the-2026-las-vegas-grand-prix.3fjavheTbHD8fjZI0i7BWd"
+  },
   {
     round: 20,
     tag: "그랑프리 리뷰",
     title: "상파울루: 노리스 폴투윈 시즌 3승 - 비 속에서 안토넬리 두 번 스핀, 베르스타펜은 21위에서 2위로",
     body: "젖은 노면에서 시작해 중간에 마르고 다시 비가 내린 변덕스러운 레이스였다. 출발에서 안토넬리가 폴 포지션 노리스를 앞질렀지만, 첫 피트스톱 뒤 차가 한쪽으로 쏠린다며 스핀해 선두를 넘겨줬고 23랩째에 또 스핀했다. 엔진 페널티로 21번 그리드에서 출발한 베르스타펜은 중반 이후 2위까지 올라왔고, 3위 하자르가 38랩째에 팀 지시로 길을 비켜줬다. 노리스가 14.602초 차로 우승해 인터라고스 2연승을 했다. 안토넬리는 5위로 들어왔고 패스티드랩(1:12.689)은 그의 기록이다.",
     source: "Autosport · Coffee Corner Motorsport", url: "https://www.autosport.com/f1/news/f1-brazilian-gp-lando-norris-wins-in-mixed-conditions-mercedes-clinches-constructors-title/10873048/"
-  },
-  {
-    round: 20,
-    tag: "챔피언십",
-    title: "메르세데스, 컨스트럭터 타이틀 확정 - 2021년 이후 첫 우승, 통산 9번째",
-    body: "러셀 4위, 안토넬리 5위로 메르세데스가 남은 3경기에서 2위 페라리가 받을 수 있는 최대 포인트(129점)를 넘겼다. 드라이버 타이틀에 이어 두 타이틀이 모두 메르세데스로 갔다. 드라이버 순위는 안토넬리 390점이 1위, 2위 싸움은 베르스타펜 279점, 러셀 262점, 해밀턴 261점으로 이어진다.",
-    source: "Autosport · Coffee Corner Motorsport", url: "https://coffeecornermotorsport.com/brazil-grand-prix-2026-race-report/"
-  },
-  {
-    round: 21,
-    tag: "프리뷰",
-    title: "라스베이거스 GP: 야간 레이스라 타이어 워밍업이 최대 과제 - 컴파운드는 아직 미공개",
-    body: "라스베이거스는 6.201km로 스파 다음으로 긴 서킷이고, 기온이 낮은 밤에 열려 타이어를 적정 온도까지 올리는 일이 특히 예선에서 중요하다. 2025년에는 낮은 온도에서 그레이닝 우려가 컸다. 피렐리는 최근 3년 연속 가장 부드러운 조합(C3-C4-C5)을 가져왔지만, 올해 배정은 아직 발표되지 않았다.",
-    source: "Pirelli · Scuderia Fans (2025년 기사 포함)", url: "https://scuderiafans.com/pirelli-reveal-las-vegas-gp-tyre-choices-as-teams-brace-for-graining-and-temperature-challenges/"
-  },
-  {
-    tag: "드라이버 마켓",
-    title: "베르스타펜, 맥라렌 이적설 - 양측 모두 공식 부인",
-    body: "레드불과의 장기 계약에 성과 기반 탈출 조항이 있다는 사실이 알려지며 실리 시즌에 불이 붙었다. 베르스타펜이 이 조항을 발동해 맥라렌으로 이적하고 피아스트리가 밀려날 수 있다는 소문까지 돌았지만, 마크 웨버와 잭 브라운 맥라렌 CEO 모두 소문을 부인했다.",
-    source: "ESPN", url: "https://www.espn.com/racing/f1/story/_/id/45965617/state-silly-season-drive-where-f1-2026"
-  },
-  {
-    tag: "드라이버 마켓",
-    title: "알론소, 2027년 이후에도 애스턴 마틴 잔류 유력",
-    body: "알론소의 거취도 실리 시즌의 화두다. 에이드리안 뉴이가 설계한 차로 우승을 노리겠다는 의지가 강해, 계약이 끝나는 2027년 이후에도 애스턴 마틴에 남을 가능성이 높게 점쳐진다.",
-    source: "ESPN", url: "https://www.espn.com/racing/f1/story/_/id/45965617/state-silly-season-drive-where-f1-2026"
-  },
-  {
-    tag: "드라이버 마켓",
-    title: "임시 복귀한 츠노다, 하스 이적 후보로 거론 - 캐딜락은 2027년 시트 2석",
-    body: "레이싱 불스에서 임시로 뛰고 있는 츠노다가 내부 갈등설이 도는 하스의 유력 이적 후보로 거론된다. 2027년 11번째 팀으로 그리드에 합류하는 캐딜락의 빈 시트 2석도 실리 시즌 최대 관심사 중 하나다.",
-    source: "GPFans", url: "https://www.gpfans.com/en/f1-news/1086590/f1-silly-season-2026/"
   }
 ];
 
@@ -648,13 +649,41 @@ const NEXT_RACE_PREVIEW = {
   facts: [
     { k: "랩 길이", v: "6.201", unit: "km" },
     { k: "레이스 랩수", v: "50", unit: "랩" },
-    { k: "코너 수", v: "17", unit: "개" }
+    { k: "총 거리", v: "310.0", unit: "km" },
+    { k: "랩 레코드", v: "1:33.365", unit: "Verstappen · 2025" },
+    { k: "코너 수", v: "17", unit: "개" },
+    { k: "평균 피트 손실", v: "21", unit: "초" }
   ],
-  tyres: [],
+  weather: {
+    asOf: "2026-11-18",
+    rows: [
+      { k: "연습 (현지 목요일)", v: "14~16°C · FP1 비 20~30%, FP2는 확률 크게 낮아짐" },
+      { k: "예선 (현지 금요일 밤)", v: "약 13°C · 비 0%" },
+      { k: "결승 (현지 토요일 밤)", v: "12~13°C · 비 0%, 약한 바람" }
+    ],
+    note: "매체마다 기온이 9~16°C로 엇갈려요. 작년 예선은 비로 젖었어요. 예보는 바뀔 수 있어요.",
+    src: { text: "PlanetF1 · Scuderia Fans · F1 LivePulse", url: "https://www.planetf1.com/news/f1-las-vegas-weather-2026-rain-risk" }
+  },
+  characteristics: [
+    { k: "트랙션", v: 2 },
+    { k: "브레이킹", v: 3 },
+    { k: "횡방향 하중", v: 2 },
+    { k: "노면 마모성", v: 2 },
+    { k: "노면 그립", v: 1 },
+    { k: "타이어 스트레스", v: 4 },
+    { k: "트랙 에볼루션", v: 5 }
+  ],
+  characteristicsSrc: { text: "Pirelli 라스베이거스 GP 프리뷰", url: "https://press.pirelli.com/the-night-time-challenge-of-las-vegas/" },
+  tyres: [
+    { compound: "C5", label: "소프트", key: "soft" },
+    { compound: "C4", label: "미디엄", key: "medium" },
+    { compound: "C3", label: "하드", key: "hard" }
+  ],
   strategyNotes: [
-    "피렐리의 2026 라스베이거스 컴파운드 배정은 아직 공개되지 않았다. 최근 3년은 모두 가장 부드러운 C3-C4-C5 조합이었다. 공개되면 이 탭을 갱신한다.",
-    "야간 레이스라 기온이 낮아 타이어를 적정 온도까지 올리는 게 핵심 과제다. 특히 예선에서 중요하고, 낮은 온도에서 그레이닝이 생기기 쉽다는 점이 2025년에도 지적됐다.",
-    "6.201km로 캘린더에서 스파 다음으로 긴 서킷이다."
+    "피렐리는 작년과 같은 C3-C4-C5 조합을 가져왔다. 기온이 10~15°C로 낮고, 도로가 매일 일반 차량에 개방돼 먼지와 모래가 쌓이기 때문에 그립이 처음엔 낮고 주말 내내 변화를 예측하기 어렵다. 올해 재포장은 13코너 진입부와 14코너 직전 오른쪽 일부 보수뿐이다.",
+    "긴 풀스로틀 구간에서는 타이어로 전달되는 에너지가 적어 온도를 유지하기 어렵다. 그래서 워밍업이 예선의 핵심이고, 냉각 랩을 줄이려고 준비 랩과 기록 랩을 연달아 달리는 팀이 나올 수 있다. 낮은 그립과 저온 때문에 그레이닝(기계적 마모)이 다시 나올 수 있다.",
+    "이론상 가장 빠른 전략은 1스톱이고 세 컴파운드 모두 후보다. C5도 레이스 스틴트로 쓸 만하다고 피렐리는 본다. 피트 뒤에는 타이어가 빨리 식어 언더컷 효과가 작다. 작년 레이스는 미디엄과 하드로 나눈 1스톱이 대세였다.",
+    "긴 직선 끝의 브레이킹에서 앞바퀴 락업으로 플랫 스팟이 생길 위험도 크다. 작년 예선처럼 비가 오면 인터미디엄보다 풀 웨트가 유리할 수 있다."
   ]
 };
 
@@ -710,6 +739,17 @@ function renderNextGpTab(){
   document.getElementById("ngFacts").innerHTML = p.facts.map(f=>
     '<div class="fact"><div class="k">'+f.k+'</div><div class="v">'+f.v+' <small>'+f.unit+'</small></div></div>'
   ).join("");
+
+  const wCard = document.getElementById("ngWeatherCard");
+  if(p.weather){
+    document.getElementById("ngWeatherAsOf").textContent = p.weather.asOf + " 기준 예보";
+    document.getElementById("ngWeather").innerHTML = p.weather.rows.map(r=>
+      '<div class="char-row"><span>'+r.k+'</span><span style="text-align:right;">'+r.v+'</span></div>').join("");
+    document.getElementById("ngWeatherNote").innerHTML = p.weather.note+' 출처: <a href="'+p.weather.src.url+'" target="_blank" rel="noopener">'+p.weather.src.text+'</a>';
+    wCard.hidden = false;
+  } else {
+    wCard.hidden = true;
+  }
 
   const charCard = document.getElementById("ngCharCard");
   if(p.characteristics){
